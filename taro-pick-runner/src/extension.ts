@@ -6,7 +6,7 @@ const path = require('path');
 const babel = require('@babel/core');
 import * as json from 'jsonc-parser';
 
-import { PickView } from './pickView';
+import { PickViewProvider } from './pick_view';
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -33,12 +33,12 @@ export function activate(context: vscode.ExtensionContext) {
     // Display a message box to the user
     const code = fs.readFileSync(path.resolve(vscode.workspace.workspaceFolders?.[0]?.uri.fsPath, 'src/app.tsx'), { flag: 'r+', encoding: 'utf8' });
     try {
-			console.log('code', code)
-			const tree = json.parseTree(code)
-			console.log('tree', tree)
+      console.log('code', code)
+      const tree = json.parseTree(code)
+      console.log('tree', tree)
       // const script = babel.transformSync('code()', {
-        // presets: ['@babel/preset-react', '@babel/preset-typescript'],
-        // plugins: [require.resolve('@babel/plugin-proposal-class-properties'), require.resolve('@babel/plugin-proposal-object-rest-spread')],
+      // presets: ['@babel/preset-react', '@babel/preset-typescript'],
+      // plugins: [require.resolve('@babel/plugin-proposal-class-properties'), require.resolve('@babel/plugin-proposal-object-rest-spread')],
       // });
       // const fsPath = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath
       // script && console.log(script);
@@ -51,8 +51,10 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(disposable);
 
-  new PickView(context);
+  const pickViewProvider = new PickViewProvider(context)
+  vscode.window.registerTreeDataProvider('pickView', pickViewProvider)
+  vscode.commands.registerCommand('pickView.addNote', () => pickViewProvider.addNote())
 }
 
 // this method is called when your extension is deactivated
-export function deactivate() {}
+export function deactivate() { }
