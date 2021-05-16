@@ -37,8 +37,28 @@ export interface AppConfig {
       text: string
     }[]
   }
+  preloadRule?: any
 }
 
 export const treeItemRootVerdict = (item: any): item is TreeItemRoot => item.pages && Array.isArray(item.pages) && item.root === undefined
 export const treeItemSubRootVerdict = (item: any): item is TreeItemSubRoot => item.pages && Array.isArray(item.pages) && item.root !== undefined
 export const treeItemPageVerdict = (item: any): item is TreeItemPage => item.path && typeof item.isPicked === 'boolean' && typeof item.isNecessary === 'boolean'
+
+//#region Storage
+export interface StorageItemPage {
+  id: string
+  isPicked: boolean
+  note?: string
+}
+
+export interface StorageItemScene {
+  name: string
+  pages: Record<string, StorageItemPage>
+}
+
+export interface StorageData {
+  pages?: Record<string, StorageItemPage>
+  scenes?: Record<string, StorageItemScene>
+  originConfigFile?: string
+}
+//#endregion

@@ -27,12 +27,29 @@
         "title": "Taro Pick Runner Show Time"
       },
       {
-        "command": "pickView.addNote",
-        "title": "添加备注",
-        "icon": {
-          "light": "resources/light/edit.svg",
-          "dark": "resources/dark/edit.svg"
-        }
+        "command": "taro-pick-runner.updateConfig",
+        "title": "Update result config",
+        "icon": "resources/dark/dependency.svg"
+      },
+      {
+        "command": "taro-pick-runner.refreshConfig",
+        "title": "Refresh result config",
+        "icon": "resources/dark/refresh.svg"
+      },
+      {
+        "command": "taro-pick-runner.recoverOriginConfigFile",
+        "title": "Recover origin config file",
+        "icon": "resources/dark/folder.svg"
+      },
+      {
+        "command": "pickView.pick",
+        "title": "选择",
+        "icon": "resources/dark/edit.svg"
+      },
+      {
+        "command": "pickView.unPick",
+        "title": "取消选择",
+        "icon": "resources/light/edit.svg"
       }
     ],
     "views": {
@@ -44,10 +61,32 @@
       ]
     },
     "menus": {
+      "view/title": [
+        {
+          "command": "taro-pick-runner.refreshConfig",
+          "title": "刷新配置",
+          "group": "navigation"
+        },
+        {
+          "command": "taro-pick-runner.updateConfig",
+          "title": "更新配置",
+          "group": "navigation"
+        },
+        {
+          "command": "taro-pick-runner.recoverOriginConfigFile",
+          "title": "还原原始配置文件",
+          "group": "navigation"
+        }
+      ],
       "view/item/context": [
         {
-          "command": "pickView.addNote",
-          "when": "view == pickView && viewItem == treeItemPage",
+          "command": "pickView.pick",
+          "when": "view == pickView && viewItem == treeItemPageUnPicked",
+          "group": "inline"
+        },
+        {
+          "command": "pickView.unPick",
+          "when": "view == pickView && viewItem == treeItemPagePicked",
           "group": "inline"
         }
       ]

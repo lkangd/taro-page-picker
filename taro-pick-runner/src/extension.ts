@@ -7,6 +7,9 @@ const babel = require('@babel/core');
 import * as json from 'jsonc-parser';
 
 import { PickViewProvider } from './pick_view';
+import { Storage } from './storage'
+
+import { recoverOriginConfigFile } from './utils'
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -51,9 +54,23 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(disposable);
 
+  Storage.mountContext(context)
+  Storage.loadData()
+
   const pickViewProvider = new PickViewProvider(context)
-  vscode.window.registerTreeDataProvider('pickView', pickViewProvider)
-  vscode.commands.registerCommand('pickView.addNote', () => pickViewProvider.addNote())
+  // vscode.window.registerTreeDataProvider('pickView', pickViewProvider)
+  const pickView = vscode.window.createTreeView('pickView', { treeDataProvider: pickViewProvider })
+  pickView.onDidChangeSelection((page: any) => {
+    console.log('page :>> ', page)
+  })
+  vscode.commands.registerCommand('pickView.pick', (page: any) => pickViewProvider.pick(page))
+  vscode.commands.registerCommand('pickView.unPick', (page: any) => pickViewProvider.unPick(page))
+  vscode.commands.registerCommand('taro-pick-runner.updateConfig', () => pickViewProvider.updateConfig())
+  vscode.commands.registerCommand('taro-pick-runner.refreshConfig', () => pickViewProvider.refreshConfig())
+  vscode.commands.registerCommand('taro-pick-runner.recoverOriginConfigFile', () => {
+    recoverOriginConfigFile()
+    pickViewProvider._onDidChangeTreeData.fire(undefined)
+  })
 }
 
 // this method is called when your extension is deactivated
