@@ -51,6 +51,18 @@
 		"subpackages/secondary/cards/index": {
 			"id": "subpackages/secondary/cards/index",
 			"isPicked": true
+		},
+		"subpackages/secondary/actForm/index": {
+			"id": "subpackages/secondary/actForm/index",
+			"isPicked": true
+		},
+		"subpackages/secondary/activityList/index": {
+			"id": "subpackages/secondary/activityList/index",
+			"isPicked": true
+		},
+		"subpackages/secondary/find/index": {
+			"id": "subpackages/secondary/find/index",
+			"isPicked": true
 		}
 	},
 	"scenes": {},

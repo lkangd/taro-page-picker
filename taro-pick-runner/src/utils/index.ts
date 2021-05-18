@@ -8,7 +8,7 @@ import generator from '@babel/generator'
 import { Storage } from '../storage'
 
 // types
-import { AppConfig, TreeItemRoot, TreeItemSubRoot, TreeItemPage } from '../type';
+import { AppConfig, TreeItemRoot, TreeItemSubRoot, TreeItemPage } from '../type'
 
 const DEFAULT_APP_CONFIG: AppConfig = { pages: [] }
 
@@ -19,13 +19,15 @@ export const getAppConfig = (): AppConfig => {
   const appEntryBase = vscode.workspace.workspaceFolders?.[0].uri.fsPath
   const files = ['js', 'ts', 'jsx', 'tsx'].map(ext => `${path.resolve(appEntryBase!, './src')}/app.${ext}`)
 
-  appEntry = files.find((ext) => fs.existsSync(ext))
-  if (!appEntry) { return DEFAULT_APP_CONFIG }
+  appEntry = files.find(ext => fs.existsSync(ext))
+  if (!appEntry) {
+    return DEFAULT_APP_CONFIG
+  }
 
   let rawFile = fs.readFileSync(appEntry, 'utf-8')
-  if (/TPR_GENERATE_FLAG/gmi.test(rawFile)) {
+  if (/TPR_GENERATE_FLAG/gim.test(rawFile)) {
     const { originConfigFile } = Storage.storageData
-    if (!originConfigFile || /TPR_GENERATE_FLAG/gmi.test(originConfigFile)) {
+    if (!originConfigFile || /TPR_GENERATE_FLAG/gim.test(originConfigFile)) {
       throw new Error('读取备份配置错误')
     }
     rawFile = originConfigFile
@@ -34,38 +36,41 @@ export const getAppConfig = (): AppConfig => {
   }
   originAst = parse(rawFile, {
     sourceType: 'module',
-    plugins: ['classProperties', 'jsx', 'typescript'],
+    plugins: ['classProperties', 'jsx', 'typescript']
   })
 
   let retAst: any
   traverse(originAst, {
     enter(path) {
-      if (
-        path.node.type === 'ClassProperty' &&
-        (path.node?.key as { name: string }).name === 'config'
-      ) {
+      if (path.node.type === 'ClassProperty' && (path.node?.key as { name: string }).name === 'config') {
         retAst = path.node.value
       }
-    },
+    }
   })
 
   const appConfigStr = generator(retAst).code
   // console.log('appConfigStr :>> ', appConfigStr)
-  if (!appConfigStr) { return DEFAULT_APP_CONFIG }
+  if (!appConfigStr) {
+    return DEFAULT_APP_CONFIG
+  }
 
   try {
-    const appConfig: AppConfig = new Function(`return ${appConfigStr}`)();
-    if (Object.prototype.toString.call(appConfig) === '[object Object]') { return appConfig }
+    const appConfig: AppConfig = new Function(`return ${appConfigStr}`)()
+    if (Object.prototype.toString.call(appConfig) === '[object Object]') {
+      return appConfig
+    }
 
     throw new Error('解析错误' + appConfig)
   } catch (err) {
-    console.log('err :>> ', err);
+    console.log('err :>> ', err)
     return DEFAULT_APP_CONFIG
   }
 }
 
 const processOriginPages = (pages: string[], parent?: string, tabBarPages?: Record<string, true>): TreeItemPage[] => {
-  const { storageData: { pages: storagePages } } = Storage
+  const {
+    storageData: { pages: storagePages }
+  } = Storage
   return pages.map(path => {
     const isPicked = storagePages?.[`${parent || ''}${path}`]?.isPicked || tabBarPages?.[path] || false
     const isNecessary = tabBarPages?.[path] || false
@@ -81,7 +86,9 @@ const processOriginPages = (pages: string[], parent?: string, tabBarPages?: Reco
 export const getTreeData = (): [TreeItemRoot, AppConfig] => {
   const appConfig: AppConfig = getAppConfig()
   const tabBarPagesMap: Record<string, true> = (() => {
-    if (!appConfig.tabBar) { return {} }
+    if (!appConfig.tabBar) {
+      return {}
+    }
 
     return appConfig.tabBar.list.reduce((map, item) => {
       map[item.pagePath] = true
@@ -92,47 +99,46 @@ export const getTreeData = (): [TreeItemRoot, AppConfig] => {
   const pages: TreeItemPage[] = processOriginPages(appConfig.pages || [], undefined, tabBarPagesMap)
   const subPackages: TreeItemSubRoot[] = (() => {
     const tempRet = appConfig.subPackages || []
-    return tempRet.map((item: { root: string, pages: string[] }) => ({
+    return tempRet.map((item: { root: string; pages: string[] }) => ({
       root: item.root,
       pages: processOriginPages(item.pages || [], item.root)
     }))
   })()
 
-  return [{
-    pages,
-    subPackages
-  }, appConfig]
+  return [
+    {
+      pages,
+      subPackages
+    },
+    appConfig
+  ]
 }
 
 export const updateEntry = (appConfig: any) => {
-  const appConfigAst: any = parse(`class App extends Component {
+  const appConfigAst: any = parse(
+    `class App extends Component {
     config: Config = ${JSON.stringify({ ...appConfig }, null, '\t')}
-  }`, {
-    sourceType: 'module',
-    plugins: ['classProperties', 'jsx', 'typescript'],
-  })
+  }`,
+    {
+      sourceType: 'module',
+      plugins: ['classProperties', 'jsx', 'typescript']
+    }
+  )
   let _appConfigAst: any
   traverse(appConfigAst, {
     enter(path) {
-      if (
-        path.node.type === 'ClassProperty' &&
-        (path.node?.key as { name: string }).name === 'config'
-      ) {
+      if (path.node.type === 'ClassProperty' && (path.node?.key as { name: string }).name === 'config') {
         _appConfigAst = path.node.value
       }
-    },
+    }
   })
 
   traverse(originAst, {
     enter(path) {
-      if (
-        path.node.type === 'ClassProperty' &&
-        (path.node?.key as { name: string }).name === 'config'
-      ) {
+      if (path.node.type === 'ClassProperty' && (path.node?.key as { name: string }).name === 'config') {
         path.node.value = _appConfigAst
       }
-
-    },
+    }
   })
   const WARNING_TEXT = `
 /**
@@ -146,13 +152,16 @@ export const updateEntry = (appConfig: any) => {
  * FIXME git checkout -- [this file]
  */
 `
-  const appEntryCode = `${WARNING_TEXT}${generator(originAst, { comments: false, filename: 'filename test', jsescOption: { quotes: 'single' } }).code}${WARNING_TEXT}`
+  const appEntryCode = `${WARNING_TEXT}${generator(originAst, { comments: false, filename: 'filename test', jsescOption: { quotes: 'single' } }).code
+    }${WARNING_TEXT}`
 
   fs.writeFileSync(appEntry, appEntryCode)
 }
 
 export const recoverOriginConfigFile = () => {
-  if (!Storage.storageData.originConfigFile) { return }
+  if (!Storage.storageData.originConfigFile) {
+    return
+  }
 
   fs.writeFileSync(appEntry, Storage.storageData.originConfigFile)
 }

@@ -2,11 +2,20 @@ import * as path from 'path'
 import * as vscode from 'vscode'
 
 import { getTreeData, updateEntry } from './utils'
-import { Storage } from './storage';
+import { Storage } from './storage'
 
 // types
-import { TreeItemRoot, TreeItemSubRoot, TreeItemPage, TreeItem, treeItemRootVerdict, treeItemSubRootVerdict, treeItemPageVerdict, AppConfig, StorageItemPage } from './type'
-
+import {
+  TreeItemRoot,
+  TreeItemSubRoot,
+  TreeItemPage,
+  TreeItem,
+  treeItemRootVerdict,
+  treeItemSubRootVerdict,
+  treeItemPageVerdict,
+  AppConfig,
+  StorageItemPage
+} from './type'
 
 interface PickViewItem {
   rawData: TreeItem
@@ -16,7 +25,9 @@ interface PickViewItem {
 }
 
 export class PickViewProvider implements vscode.TreeDataProvider<PickViewItem> {
-  public _onDidChangeTreeData: vscode.EventEmitter<PickViewItem | undefined> = new vscode.EventEmitter<PickViewItem | undefined>()
+  public _onDidChangeTreeData: vscode.EventEmitter<PickViewItem | undefined> = new vscode.EventEmitter<
+    PickViewItem | undefined
+  >()
   readonly onDidChangeTreeData: vscode.Event<PickViewItem | undefined> = this._onDidChangeTreeData.event
 
   private treeData!: TreeItemRoot
@@ -35,26 +46,27 @@ export class PickViewProvider implements vscode.TreeDataProvider<PickViewItem> {
   getChildren(pickViewItem?: PickViewItem): PickViewItem[] {
     // console.log('treeItem123 :>> ', pickViewItem)
     if (pickViewItem) {
-      let ret = pickViewItem.children?.map((item: TreeItem): PickViewItem => {
-        if (treeItemSubRootVerdict(item)) {
-          return {
-            label: item.root,
-            rawData: item,
-            children: item.pages,
+      let ret =
+        pickViewItem.children?.map((item: TreeItem): PickViewItem => {
+          if (treeItemSubRootVerdict(item)) {
+            return {
+              label: item.root,
+              rawData: item,
+              children: item.pages
+            }
           }
-        }
-        if (treeItemPageVerdict(item)) {
-          return {
-            label: item.path,
-            rawData: item,
-            parent: item.parent
+          if (treeItemPageVerdict(item)) {
+            return {
+              label: item.path,
+              rawData: item,
+              parent: item.parent
+            }
           }
-        }
-        return {
-          label: '未知',
-          rawData: {} as TreeItem
-        }
-      }) || []
+          return {
+            label: '未知',
+            rawData: {} as TreeItem
+          }
+        }) || []
 
       // make tabbar and selected page first
       const necessary = []
@@ -74,18 +86,24 @@ export class PickViewProvider implements vscode.TreeDataProvider<PickViewItem> {
           unPicked.push(item)
         }
       }
-      console.log('necessary :>> ', necessary);
+      console.log('necessary :>> ', necessary)
       return [...necessary, ...picked, ...unPicked]
     }
     // Storage.saveData(this.treeData, this.context)
-    console.log('this.treeData :>> ', this.treeData);
+    console.log('this.treeData :>> ', this.treeData)
     return Object.entries(this.treeData).map(([key, value]) => ({ label: key, rawData: value, children: value }))
   }
 
   getTreeItem(pickViewItem: PickViewItem): vscode.TreeItem {
-    const isSelected = (pickViewItem.rawData as TreeItemPage).isNecessary || (pickViewItem.rawData as TreeItemPage).isPicked
+    const isSelected =
+      (pickViewItem.rawData as TreeItemPage).isNecessary || (pickViewItem.rawData as TreeItemPage).isPicked
     // console.log('(pickViewItem.rawData as TreeItemPage).isPicked :>> ', (pickViewItem.rawData as TreeItemPage).isPicked);
-    const contextValue = pickViewItem.children && pickViewItem.children.length ? undefined : (pickViewItem.rawData as TreeItemPage).isPicked ? 'treeItemPagePicked' : 'treeItemPageUnPicked'
+    const contextValue =
+      pickViewItem.children && pickViewItem.children.length
+        ? undefined
+        : (pickViewItem.rawData as TreeItemPage).isPicked
+        ? 'treeItemPagePicked'
+        : 'treeItemPageUnPicked'
     // console.log('contextValue :>> ', contextValue);
     // console.log('isSelected :>> ', isSelected);
     let label = pickViewItem.label
@@ -97,10 +115,15 @@ export class PickViewProvider implements vscode.TreeDataProvider<PickViewItem> {
       id: `${pickViewItem.parent}${pickViewItem.label}`,
       label: isSelected ? label : '',
       description: isSelected ? '' : label,
-      collapsibleState: pickViewItem.children && pickViewItem.children.length ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None,
+      collapsibleState:
+        pickViewItem.children && pickViewItem.children.length
+          ? vscode.TreeItemCollapsibleState.Collapsed
+          : vscode.TreeItemCollapsibleState.None,
       tooltip: '页面路径',
       contextValue,
-      iconPath: isSelected ? path.join(__filename, '..', '..', 'resources', 'dark', 'document.svg') : path.join(__filename, '..', '..', 'resources', 'light', 'document.svg')
+      iconPath: isSelected
+        ? path.join(__filename, '..', '..', 'resources', 'dark', 'document.svg')
+        : path.join(__filename, '..', '..', 'resources', 'light', 'document.svg')
       // iconPath: {
       //   light: path.join(__filename, '..', '..', 'resources', 'light', 'document.svg'),
       //   dark: path.join(__filename, '..', '..', 'resources', 'dark', 'document.svg')
@@ -110,7 +133,9 @@ export class PickViewProvider implements vscode.TreeDataProvider<PickViewItem> {
 
   async addNote(): Promise<void> {
     const note = await vscode.window.showInputBox({ placeHolder: '请输入页面备注' })
-    if (note === null || note === undefined) { return }
+    if (note === null || note === undefined) {
+      return
+    }
 
     // console.log('note :>> ', note)
   }
@@ -118,7 +143,7 @@ export class PickViewProvider implements vscode.TreeDataProvider<PickViewItem> {
   pick(pickViewItem: PickViewItem) {
     // console.log('pick page :>> ', pickViewItem);
 
-    (pickViewItem.rawData as TreeItemPage).isPicked = true
+    ;(pickViewItem.rawData as TreeItemPage).isPicked = true
     // page.
     this._onDidChangeTreeData.fire(undefined)
   }
@@ -126,7 +151,7 @@ export class PickViewProvider implements vscode.TreeDataProvider<PickViewItem> {
   unPick(pickViewItem: PickViewItem) {
     // console.log('un pick page :>> ', pickViewItem);
 
-    (pickViewItem.rawData as TreeItemPage).isPicked = false
+    ;(pickViewItem.rawData as TreeItemPage).isPicked = false
     // page.
     this._onDidChangeTreeData.fire(undefined)
   }
@@ -159,7 +184,7 @@ export class PickViewProvider implements vscode.TreeDataProvider<PickViewItem> {
     delete appConfig.preloadRule
     updateEntry(appConfig)
     Storage.saveData({ pages: storagePages })
-    console.log('pickedPages :>> ', pickedPages);
+    console.log('pickedPages :>> ', pickedPages)
   }
   refreshConfig() {
     this.getTreeData()
