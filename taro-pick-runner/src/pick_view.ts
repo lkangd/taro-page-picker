@@ -6,188 +6,405 @@ import { Storage } from './storage'
 
 // types
 import {
-  TreeItemRoot,
-  TreeItemSubRoot,
   TreeItemPage,
+  TreeItemRoot,
+  TreeItemSubPackage,
   TreeItem,
-  treeItemRootVerdict,
-  treeItemSubRootVerdict,
   treeItemPageVerdict,
+  treeItemSubPackageVerdict,
+  treeItemSubRootVerdict,
   AppConfig,
+  ViewItem,
   StorageItemPage
 } from './type'
 
-interface PickViewItem {
-  rawData: TreeItem
-  label: string
-  parent?: string
-  children?: any[]
+enum ContextValue {
+  root = 'root',
+  rootSub = 'rootSub',
+  package = 'package',
+  packageSub = 'packageSub',
+  pagePicked = 'pagePicked',
+  pageUnPicked = 'pageUnPicked',
+  pageTabbar = 'pageTabbar',
+  pageEntry = 'pageEntry'
 }
 
-export class PickViewProvider implements vscode.TreeDataProvider<PickViewItem> {
-  public _onDidChangeTreeData: vscode.EventEmitter<PickViewItem | undefined> = new vscode.EventEmitter<
-    PickViewItem | undefined
+interface TreeItemDisplayInfo {
+  label: vscode.TreeItem['label']
+  description: vscode.TreeItem['description']
+  tooltip: vscode.TreeItem['tooltip']
+}
+
+export class PickViewProvider implements vscode.TreeDataProvider<ViewItem> {
+  private _onDidChangeTreeData: vscode.EventEmitter<ViewItem | undefined> = new vscode.EventEmitter<
+    ViewItem | undefined
   >()
-  readonly onDidChangeTreeData: vscode.Event<PickViewItem | undefined> = this._onDidChangeTreeData.event
+  readonly onDidChangeTreeData: vscode.Event<ViewItem | undefined> = this._onDidChangeTreeData.event
 
   private treeData!: TreeItemRoot
   private appConfig!: AppConfig
+  private entry?: TreeItemPage
 
-  constructor(private context: vscode.ExtensionContext) {
+  constructor() {
     this.getTreeData()
   }
 
+  refreshTreeView(viewItem?: ViewItem) {
+    this._onDidChangeTreeData.fire(viewItem)
+  }
+
+  /**
+   * 获取 tree data
+   * 并初始化相关状态
+   * @private
+   * @memberof PickViewProvider
+   */
   private getTreeData(): void {
     const [treeData, appConfig] = getTreeData()
     this.treeData = treeData
     this.appConfig = appConfig
+    this.entry = undefined
   }
 
-  getChildren(pickViewItem?: PickViewItem): PickViewItem[] {
-    // console.log('treeItem123 :>> ', pickViewItem)
-    if (pickViewItem) {
-      let ret =
-        pickViewItem.children?.map((item: TreeItem): PickViewItem => {
-          if (treeItemSubRootVerdict(item)) {
-            return {
-              label: item.root,
-              rawData: item,
-              children: item.pages
-            }
-          }
-          if (treeItemPageVerdict(item)) {
-            return {
-              label: item.path,
-              rawData: item,
-              parent: item.parent
-            }
-          }
-          return {
-            label: '未知',
-            rawData: {} as TreeItem
-          }
-        }) || []
+  /**
+   * 根据ViewItem 的类型获取对应的 context value
+   * 用于不同操作按钮的展示
+   * @private
+   * @param {ViewItem} viewItem
+   * @return {*}
+   * @memberof PickViewProvider
+   */
+  private _getTreeItemContextValue(viewItem: ViewItem) {
+    if (typeof viewItem.children !== 'undefined') {
+      if (treeItemSubRootVerdict(viewItem.rawData)) return ContextValue.rootSub
+      if (treeItemSubPackageVerdict(viewItem.rawData)) return ContextValue.packageSub
+      return ContextValue.package
+    }
+    // if ((viewItem.rawData as TreeItemPage).entry) return ContextValue.pageEntry
+    if ((viewItem.rawData as TreeItemPage).tabbar) return ContextValue.pageTabbar
+    if ((viewItem.rawData as TreeItemPage).picked) return ContextValue.pagePicked
+    return ContextValue.pageUnPicked
+  }
 
-      // make tabbar and selected page first
-      const necessary = []
-      const picked = []
-      const unPicked = []
-      // fin.push(...ret.filter(item => !(item.rawData as TreeItemPage).isNecessary).sort(item => (item.rawData as TreeItemPage).isPicked ? -1 : 1))
-      // ret = ret.sort(item => (item.rawData as TreeItemPage).isNecessary ? 1 : (item.rawData as TreeItemPage).isPicked ? 1 : -1)
-      // console.log('fin :>> ', fin);
-      // console.log('ret :>> ', ret);
-      // const newRet = []
-      for (const item of ret) {
-        if ((item.rawData as TreeItemPage).isNecessary) {
-          necessary.push(item)
-        } else if ((item.rawData as TreeItemPage).isPicked) {
-          picked.push(item)
-        } else {
-          unPicked.push(item)
-        }
+  /**
+   * 根据 ViewItem 的类型获取对应的展示文本
+   * @private
+   * @param {ViewItem} viewItem
+   * @return {*} {TreeItemDisplayInfo}
+   * @memberof PickViewProvider
+   */
+  private _getTreeItemDisplayInfo(viewItem: ViewItem): TreeItemDisplayInfo {
+    if (viewItem.children) {
+      if (treeItemSubRootVerdict(viewItem.rawData))
+        return { label: viewItem.label, description: `(${viewItem.children.length})`, tooltip: '分包总块' }
+
+      const pickedChildren = viewItem.children.filter(item => treeItemPageVerdict(item) && item.picked).length
+      return {
+        label: viewItem.label,
+        description: `(${pickedChildren}/${viewItem.children.length})`,
+        tooltip: '主包/分包,点击右侧操作符切换选择所有/取消所有'
       }
-      console.log('necessary :>> ', necessary)
-      return [...necessary, ...picked, ...unPicked]
     }
-    // Storage.saveData(this.treeData, this.context)
-    console.log('this.treeData :>> ', this.treeData)
-    return Object.entries(this.treeData).map(([key, value]) => ({ label: key, rawData: value, children: value }))
+    if (treeItemPageVerdict(viewItem.rawData)) {
+      const isPicked = viewItem.rawData.entry || viewItem.rawData.tabbar || viewItem.rawData.picked
+      const tooltip = '页面,点击右侧操作符切换选择'
+      return isPicked
+        ? { label: viewItem.label, description: '', tooltip }
+        : { label: '', description: viewItem.label, tooltip }
+    }
+    return { label: viewItem.label, description: '', tooltip: '未知,请检查插件是否运行错误.' }
   }
 
-  getTreeItem(pickViewItem: PickViewItem): vscode.TreeItem {
-    const isSelected =
-      (pickViewItem.rawData as TreeItemPage).isNecessary || (pickViewItem.rawData as TreeItemPage).isPicked
-    // console.log('(pickViewItem.rawData as TreeItemPage).isPicked :>> ', (pickViewItem.rawData as TreeItemPage).isPicked);
-    const contextValue =
-      pickViewItem.children && pickViewItem.children.length
-        ? undefined
-        : (pickViewItem.rawData as TreeItemPage).isPicked
-        ? 'treeItemPagePicked'
-        : 'treeItemPageUnPicked'
-    // console.log('contextValue :>> ', contextValue);
-    // console.log('isSelected :>> ', isSelected);
-    let label = pickViewItem.label
-    if (pickViewItem.children) {
-      const pickedChildren = pickViewItem.children.filter(item => !!item.isPicked).length
-      label += `(${pickedChildren}/${pickViewItem.children?.length})`
+  /**
+   * 根据 ViewItem 的类型类获取对应的 icon
+   * @private
+   * @param {ViewItem} viewItem
+   * @return {*}  {vscode.TreeItem['iconPath']}
+   * @memberof PickViewProvider
+   */
+  private _getTreeItemIcon(viewItem: ViewItem): vscode.TreeItem['iconPath'] {
+    if (viewItem.children) {
+      if (treeItemSubPackageVerdict(viewItem.rawData)) {
+        return path.join(__filename, '..', '..', 'resources', 'dark', 'package-sub.svg')
+      }
+      return path.join(__filename, '..', '..', 'resources', 'dark', 'package.svg')
     }
+    if (treeItemPageVerdict(viewItem.rawData)) {
+      switch (true) {
+        case viewItem.rawData.entry:
+          return path.join(__filename, '..', '..', 'resources', 'dark', 'page-entry.svg')
+        case viewItem.rawData.tabbar:
+          return path.join(__filename, '..', '..', 'resources', 'dark', 'page-tabbar.svg')
+        case viewItem.rawData.picked:
+          return path.join(__filename, '..', '..', 'resources', 'dark', 'page-picked.svg')
+        default:
+          return path.join(__filename, '..', '..', 'resources', 'dark', 'page-un-picked.svg')
+      }
+    }
+    return ''
+  }
+
+  /**
+   * 根据 ViewItem 的类型获取对应的展开状态
+   * @private
+   * @param {ViewItem} viewItem
+   * @return {*}  {vscode.TreeItem['collapsibleState']}
+   * @memberof PickViewProvider
+   */
+  private _getTreeItemCSBState(viewItem: ViewItem): vscode.TreeItem['collapsibleState'] {
+    switch (true) {
+      case !viewItem.children || !viewItem.children.length:
+        return vscode.TreeItemCollapsibleState.None
+      case viewItem.children?.some(item => treeItemPageVerdict(item)) && !(<TreeItemSubPackage>viewItem.rawData)?.root:
+        return vscode.TreeItemCollapsibleState.Expanded
+      default:
+        return vscode.TreeItemCollapsibleState.Collapsed
+    }
+  }
+
+  /**
+   * 根据 ViewItem 的类型获取对应的 TreeItem
+   * @param {ViewItem} viewItem
+   * @return {*}  {vscode.TreeItem}
+   * @memberof PickViewProvider
+   */
+  getTreeItem(viewItem: ViewItem): vscode.TreeItem {
+    const displayInfo = this._getTreeItemDisplayInfo(viewItem)
     return {
-      id: `${pickViewItem.parent}${pickViewItem.label}`,
-      label: isSelected ? label : '',
-      description: isSelected ? '' : label,
-      collapsibleState:
-        pickViewItem.children && pickViewItem.children.length
-          ? vscode.TreeItemCollapsibleState.Collapsed
-          : vscode.TreeItemCollapsibleState.None,
-      tooltip: '页面路径',
-      contextValue,
-      iconPath: isSelected
-        ? path.join(__filename, '..', '..', 'resources', 'dark', 'document.svg')
-        : path.join(__filename, '..', '..', 'resources', 'light', 'document.svg')
-      // iconPath: {
-      //   light: path.join(__filename, '..', '..', 'resources', 'light', 'document.svg'),
-      //   dark: path.join(__filename, '..', '..', 'resources', 'dark', 'document.svg')
-      // }
+      id: viewItem.id,
+      label: displayInfo?.label,
+      description: displayInfo?.description,
+      tooltip: displayInfo?.tooltip,
+      contextValue: this._getTreeItemContextValue(viewItem),
+      iconPath: this._getTreeItemIcon(viewItem),
+      collapsibleState: this._getTreeItemCSBState(viewItem)
     }
   }
 
-  async addNote(): Promise<void> {
-    const note = await vscode.window.showInputBox({ placeHolder: '请输入页面备注' })
-    if (note === null || note === undefined) {
-      return
+  /**
+   * 天才第一步
+   * 获取每个可展开节点的后代
+   * 当 viewItem 为空时，为顶级根
+   * @param {ViewItem} [viewItem]
+   * @return {*}  {ViewItem[]}
+   * @memberof PickViewProvider
+   */
+  getChildren(viewItem?: ViewItem): ViewItem[] {
+    if (!viewItem) {
+      console.log('TPR Load Tree Data:>> ', this.treeData)
+      return Object.entries(this.treeData).map(([key, value]) => ({ rawData: value, label: key, children: value }))
     }
 
-    // console.log('note :>> ', note)
+    const unSortChildren = viewItem.children || []
+    viewItem.children = Object.values(
+      unSortChildren.reduce(
+        (ret, item) => {
+          switch (true) {
+            case (<TreeItemPage>item).entry:
+              this.entry = <TreeItemPage>item
+              ret.entry.push(item)
+              break
+            case (<TreeItemPage>item).tabbar:
+              // set first picked main package page the entry page
+              if (!this.entry && treeItemPageVerdict(item) && !item.parent) {
+                this.entry = item
+                item.entry = true
+                ret.entry.push(item)
+              } else {
+                ret.tabbar.push(item)
+              }
+              break
+            case (<TreeItemPage>item).picked:
+              // set first picked main package page the entry page
+              if (!this.entry && treeItemPageVerdict(item) && !item.parent) {
+                this.entry = item
+                item.entry = true
+                ret.entry.push(item)
+              } else {
+                ret.picked.push(item)
+              }
+              break
+            default:
+              ret.unPicked.push(item)
+              break
+          }
+          return ret
+        },
+        { entry: [], tabbar: [], picked: [], unPicked: [] } as Record<string, (TreeItemPage | TreeItemSubPackage)[]>
+      )
+    ).reduce((ret, sort) => [...ret, ...sort], [])
+
+    if (this.entry && viewItem.children.some(item => treeItemPageVerdict(item))) {
+      this.entry.sibling = <TreeItemPage[]>viewItem.children
+    }
+
+    const ret =
+      viewItem.children?.map((item: TreeItem): ViewItem => {
+        if (treeItemSubPackageVerdict(item)) return { rawData: item, label: item.root, children: item.pages }
+        if (treeItemPageVerdict(item)) return { rawData: item, label: item.path, parent: item.parent, id: item.id }
+        return { label: '未知', rawData: {} as TreeItem }
+      }) || []
+
+    return ret
   }
 
-  pick(pickViewItem: PickViewItem) {
-    // console.log('pick page :>> ', pickViewItem);
+  /**
+   * 找到第一个选中的主包并设置为 entry
+   * @memberof PickViewProvider
+   */
+  private _setFirstPickedEntry() {
+    if (!this.entry || !this.entry.sibling) return
 
-    ;(pickViewItem.rawData as TreeItemPage).isPicked = true
-    // page.
-    this._onDidChangeTreeData.fire(undefined)
+    const sibling = this.entry.sibling
+    this.entry.entry = false
+    const firstPickedPage = sibling.find(item => item.picked)
+    if (firstPickedPage) {
+      this.entry = firstPickedPage
+      firstPickedPage.entry = true
+    }
   }
 
-  unPick(pickViewItem: PickViewItem) {
-    // console.log('un pick page :>> ', pickViewItem);
+  /**
+   * 设置 page 为 entry page
+   * 只对 main package 的页面有效
+   * @param {ViewItem} viewItem
+   * @memberof PickViewProvider
+   */
+  setEntry(viewItem: ViewItem) {
+    if (!treeItemPageVerdict(viewItem.rawData) || viewItem.rawData.parent) return
+    if (this.entry) {
+      this.entry.entry = false
+    }
 
-    ;(pickViewItem.rawData as TreeItemPage).isPicked = false
-    // page.
-    this._onDidChangeTreeData.fire(undefined)
+    viewItem.rawData.picked = true
+    viewItem.rawData.entry = true
+    this.entry = viewItem.rawData
+    this.refreshTreeView()
   }
 
-  updateConfig() {
+  /**
+   * 选择指定的页面
+   * tabBar 页面将会被忽略
+   * @param {ViewItem} viewItem
+   * @memberof PickViewProvider
+   */
+  pick(viewItem: ViewItem) {
+    if (!treeItemPageVerdict(viewItem.rawData) || viewItem.rawData.tabbar) return
+
+    viewItem.rawData.picked = true
+    this.refreshTreeView()
+  }
+
+  /**
+   * 取消选择指定的页面
+   * tabBar 页面将会被忽略
+   * @param {ViewItem} viewItem
+   * @memberof PickViewProvider
+   */
+  unPick(viewItem: ViewItem) {
+    if (!treeItemPageVerdict(viewItem.rawData) || viewItem.rawData.tabbar) return
+
+    viewItem.rawData.picked = false
+    if (viewItem.rawData.entry) {
+      viewItem.rawData.entry = false
+      this._setFirstPickedEntry()
+    }
+    this.refreshTreeView()
+  }
+
+  /**
+   * 选择所有[分包页面 | 主包页面]
+   * tabBar 页面将会被忽略
+   * @param {ViewItem} viewItem
+   * @memberof PickViewProvider
+   */
+  pickAll(viewItem: ViewItem) {
+    viewItem.children?.forEach(item => treeItemPageVerdict(item) && !item.tabbar && (item.picked = true))
+    this.refreshTreeView()
+  }
+
+  /**
+   * 取消选择所有[分包页面 | 主包页面]
+   * tabBar 页面将会被忽略
+   * @param {ViewItem} viewItem
+   * @memberof PickViewProvider
+   */
+  unPickAll(viewItem: ViewItem) {
+    viewItem.children?.forEach(item => {
+      if (!treeItemPageVerdict(item) || item.tabbar) return
+      item.picked = false
+      item.entry = false
+    })
+    this._setFirstPickedEntry()
+    this.refreshTreeView()
+  }
+
+  /**
+   * 重新读取原始配置文件
+   * @memberof PickViewProvider
+   */
+  reloadConfig() {
+    this.getTreeData()
+    this.refreshTreeView()
+  }
+
+  /**
+   * 生成并保存配置
+   * @memberof PickViewProvider
+   */
+  saveConfig() {
     const storagePages: Record<string, StorageItemPage> = {}
-    const pickedPages = this.treeData.pages.reduce((ret, item) => {
-      if (item.isPicked) {
-        ret.push(item.path)
-        storagePages[`${item.parent || ''}${item.path}`] = { id: `${item.parent || ''}${item.path}`, isPicked: true }
-      }
-      return ret
-    }, [] as string[])
+
+    // main package
+    const pickedPages = Object.values(
+      this.treeData.pages.reduce(
+        (ret, item) => {
+          const storagePage: StorageItemPage = { id: item.id!, picked: true }
+          switch (true) {
+            case item.entry:
+              storagePage.entry = true
+              ret.entry.push(item.path)
+              break
+            case item.tabbar:
+              ret.tabbar.push(item.path)
+              break
+            case item.picked:
+              ret.picked.push(item.path)
+              break
+            default:
+              storagePage.picked = false
+              ret.unPicked.push(item.path)
+              break
+          }
+          // only save picked page
+          if (storagePage.picked) {
+            storagePages[item.id!] = storagePage
+          }
+          return ret
+        },
+        { entry: [], tabbar: [], picked: [], unPicked: [] } as Record<string, string[]>
+      )
+    ).reduce((ret, sort) => [...ret, ...sort], [])
+
+    // sub packages
     const pickedSubPackages = this.treeData.subPackages?.reduce((ret, item) => {
       const pickedPages = item.pages.reduce((ret, item) => {
-        if (item.isPicked) {
+        if (item.picked) {
           ret.push(item.path)
-          storagePages[`${item.parent || ''}${item.path}`] = { id: `${item.parent || ''}${item.path}`, isPicked: true }
+          storagePages[item.id!] = { id: item.id!, picked: true }
         }
         return ret
       }, [] as string[])
-      if (pickedPages.length >= 1) {
-        ret.push({ ...item, pages: pickedPages })
-      }
+      pickedPages.length >= 1 && ret.push({ ...item, pages: pickedPages })
+
       return ret
     }, [] as any)
+
     const appConfig = { ...this.appConfig }
     appConfig.pages = pickedPages
     appConfig.subPackages = pickedSubPackages
-    delete appConfig.preloadRule
+    delete appConfig.preloadRule // delete preload rule
     updateEntry(appConfig)
     Storage.saveData({ pages: storagePages })
-    console.log('pickedPages :>> ', pickedPages)
-  }
-  refreshConfig() {
-    this.getTreeData()
-    this._onDidChangeTreeData.fire(undefined)
   }
 }

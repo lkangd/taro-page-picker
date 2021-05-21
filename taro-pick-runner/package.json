@@ -11,45 +11,49 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:taro-pick-runner.helloWorld",
-    "onCommand:taro-pick-runner.showTime",
     "onView:pickView"
   ],
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "taro-pick-runner.helloWorld",
-        "title": "Hello World"
+        "command": "taro-pick-runner.revertConfig",
+        "title": "Revert config",
+        "icon": "resources/dark/revert.svg"
       },
       {
-        "command": "taro-pick-runner.showTime",
-        "title": "Taro Pick Runner Show Time"
+        "command": "taro-pick-runner.reloadConfig",
+        "title": "Reload config",
+        "icon": "resources/dark/reload.svg"
       },
       {
-        "command": "taro-pick-runner.updateConfig",
-        "title": "Update result config",
-        "icon": "resources/dark/dependency.svg"
+        "command": "taro-pick-runner.saveConfig",
+        "title": "Save config",
+        "icon": "resources/dark/save.svg"
       },
       {
-        "command": "taro-pick-runner.refreshConfig",
-        "title": "Refresh result config",
-        "icon": "resources/dark/refresh.svg"
-      },
-      {
-        "command": "taro-pick-runner.recoverOriginConfigFile",
-        "title": "Recover origin config file",
-        "icon": "resources/dark/folder.svg"
+        "command": "pickView.setEntry",
+        "title": "Set entry"
       },
       {
         "command": "pickView.pick",
-        "title": "选择",
-        "icon": "resources/dark/edit.svg"
+        "title": "Pick page",
+        "icon": "resources/dark/checkbox-un-picked.svg"
       },
       {
         "command": "pickView.unPick",
-        "title": "取消选择",
-        "icon": "resources/light/edit.svg"
+        "title": "Unpick page",
+        "icon": "resources/dark/checkbox-picked.svg"
+      },
+      {
+        "command": "pickView.unPickAll",
+        "title": "Unpick all pages",
+        "icon": "resources/dark/checkbox-un-picked.svg"
+      },
+      {
+        "command": "pickView.pickAll",
+        "title": "Pick all pages",
+        "icon": "resources/dark/checkbox-picked.svg"
       }
     ],
     "views": {
@@ -63,30 +67,47 @@
     "menus": {
       "view/title": [
         {
-          "command": "taro-pick-runner.refreshConfig",
-          "title": "刷新配置",
-          "group": "navigation"
+          "command": "taro-pick-runner.revertConfig",
+          "title": "还原原始配置",
+          "group": "navigation",
+          "when": "view == pickView"
         },
         {
-          "command": "taro-pick-runner.updateConfig",
-          "title": "更新配置",
-          "group": "navigation"
+          "command": "taro-pick-runner.reloadConfig",
+          "title": "重新读取配置",
+          "group": "navigation",
+          "when": "view == pickView"
         },
         {
-          "command": "taro-pick-runner.recoverOriginConfigFile",
-          "title": "还原原始配置文件",
-          "group": "navigation"
+          "command": "taro-pick-runner.saveConfig",
+          "title": "保存配置",
+          "group": "navigation",
+          "when": "view == pickView"
         }
       ],
       "view/item/context": [
         {
+          "command": "pickView.setEntry",
+          "when": "view == pickView && viewItem =~ /^page/"
+        },
+        {
           "command": "pickView.pick",
-          "when": "view == pickView && viewItem == treeItemPageUnPicked",
+          "when": "view == pickView && viewItem == pageUnPicked",
           "group": "inline"
         },
         {
           "command": "pickView.unPick",
-          "when": "view == pickView && viewItem == treeItemPagePicked",
+          "when": "view == pickView && viewItem == pagePicked",
+          "group": "inline"
+        },
+        {
+          "command": "pickView.pickAll",
+          "when": "view == pickView && viewItem == packageSub || viewItem == package",
+          "group": "inline"
+        },
+        {
+          "command": "pickView.unPickAll",
+          "when": "view == pickView && viewItem == packageSub || viewItem == package",
           "group": "inline"
         }
       ]
@@ -134,7 +155,6 @@
     "@babel/standalone": "^7.13.9",
     "@babel/traverse": "^7.13.9",
     "@babel/types": "^7.13.9",
-    "babel-plugin-transform-class-properties": "^6.24.1",
-    "jsonc-parser": "^3.0.0"
+    "babel-plugin-transform-class-properties": "^6.24.1"
   }
 }

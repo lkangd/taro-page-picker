@@ -1,68 +1,13 @@
 {
 	"pages": {
-		"page/mainPage/pages/entry/main": {
-			"id": "page/mainPage/pages/entry/main",
-			"isPicked": true
-		},
 		"page/mainPage/pages/allHouseList/main": {
 			"id": "page/mainPage/pages/allHouseList/main",
-			"isPicked": true
+			"picked": true,
+			"entry": true
 		},
 		"page/mainPage/pages/projectList/main": {
 			"id": "page/mainPage/pages/projectList/main",
-			"isPicked": true
-		},
-		"page/mainPage/pages/my/main": {
-			"id": "page/mainPage/pages/my/main",
-			"isPicked": true
-		},
-		"page/mainPage/pages/blank/main": {
-			"id": "page/mainPage/pages/blank/main",
-			"isPicked": true
-		},
-		"page/mainPage/pages/blankTab/main": {
-			"id": "page/mainPage/pages/blankTab/main",
-			"isPicked": true
-		},
-		"page/mainPage/pages/blankTab2/main": {
-			"id": "page/mainPage/pages/blankTab2/main",
-			"isPicked": true
-		},
-		"page/mainPage/pages/webview/main": {
-			"id": "page/mainPage/pages/webview/main",
-			"isPicked": true
-		},
-		"subpackages/pinTalkPage/pages/xsdjWebview/main": {
-			"id": "subpackages/pinTalkPage/pages/xsdjWebview/main",
-			"isPicked": true
-		},
-		"subpackages/pinTalkPage/pages/videoViewingHouse/main": {
-			"id": "subpackages/pinTalkPage/pages/videoViewingHouse/main",
-			"isPicked": true
-		},
-		"subpackages/secondary/customerList/index": {
-			"id": "subpackages/secondary/customerList/index",
-			"isPicked": true
-		},
-		"subpackages/secondary/signDesk/index": {
-			"id": "subpackages/secondary/signDesk/index",
-			"isPicked": true
-		},
-		"subpackages/secondary/cards/index": {
-			"id": "subpackages/secondary/cards/index",
-			"isPicked": true
-		},
-		"subpackages/secondary/actForm/index": {
-			"id": "subpackages/secondary/actForm/index",
-			"isPicked": true
-		},
-		"subpackages/secondary/activityList/index": {
-			"id": "subpackages/secondary/activityList/index",
-			"isPicked": true
-		},
-		"subpackages/secondary/find/index": {
-			"id": "subpackages/secondary/find/index",
-			"isPicked": true
+			"picked": true
 		}
 	},
 	"scenes": {},
