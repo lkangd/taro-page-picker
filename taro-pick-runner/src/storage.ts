@@ -36,8 +36,8 @@ export namespace Storage {
     if (overWrite) {
       storageData = toSaveData
     } else {
-      if (toSaveData.originConfigFile !== undefined) {
-        storageData.originConfigFile = toSaveData.originConfigFile
+      if (toSaveData.originAppFile !== undefined) {
+        storageData.originAppFile = toSaveData.originAppFile
       }
       if (toSaveData.pages !== undefined) {
         storageData.pages = { ...(toSaveData.pages || {}) }

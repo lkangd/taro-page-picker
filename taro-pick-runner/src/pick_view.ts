@@ -1,7 +1,8 @@
-import * as path from 'path'
 import * as vscode from 'vscode'
 
-import { getTreeData, updateEntry } from './utils'
+// utils
+import { getTreeData, updateEntry, revertConfig } from './utils'
+import { getIconPath } from './utils/get_icon'
 import { Storage } from './storage'
 
 // types
@@ -125,20 +126,20 @@ export class PickViewProvider implements vscode.TreeDataProvider<ViewItem> {
   private _getTreeItemIcon(viewItem: ViewItem): vscode.TreeItem['iconPath'] {
     if (viewItem.children) {
       if (treeItemSubPackageVerdict(viewItem.rawData)) {
-        return path.join(__filename, '..', '..', 'resources', 'dark', 'package-sub.svg')
+        return getIconPath('package-sub')
       }
-      return path.join(__filename, '..', '..', 'resources', 'dark', 'package.svg')
+      return getIconPath('package')
     }
     if (treeItemPageVerdict(viewItem.rawData)) {
       switch (true) {
         case viewItem.rawData.entry:
-          return path.join(__filename, '..', '..', 'resources', 'dark', 'page-entry.svg')
+          return getIconPath('page-entry')
         case viewItem.rawData.tabbar:
-          return path.join(__filename, '..', '..', 'resources', 'dark', 'page-tabbar.svg')
+          return getIconPath('page-tabbar')
         case viewItem.rawData.picked:
-          return path.join(__filename, '..', '..', 'resources', 'dark', 'page-picked.svg')
+          return getIconPath('page-picked')
         default:
-          return path.join(__filename, '..', '..', 'resources', 'dark', 'page-un-picked.svg')
+          return getIconPath('page-un-picked')
       }
     }
     return ''
@@ -336,6 +337,15 @@ export class PickViewProvider implements vscode.TreeDataProvider<ViewItem> {
       item.entry = false
     })
     this._setFirstPickedEntry()
+    this.refreshTreeView()
+  }
+
+  /**
+   * 还原原始配置文件
+   * @memberof PickViewProvider
+   */
+  revertConfig() {
+    revertConfig()
     this.refreshTreeView()
   }
 

@@ -73,6 +73,6 @@ export interface StorageItemScene {
 export interface StorageData {
   pages?: Record<string, StorageItemPage>
   scenes?: Record<string, StorageItemScene>
-  originConfigFile?: string
+  originAppFile?: string
 }
 //#endregion

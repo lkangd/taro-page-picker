@@ -29,13 +29,13 @@ export const getAppConfig = (): AppConfig => {
 
   let rawFile = fs.readFileSync(appEntry, 'utf-8')
   if (new RegExp(TPR_GENERATE_FLAG, 'gmi').test(rawFile)) {
-    const { originConfigFile } = Storage.storageData
-    if (!originConfigFile || /TPR_GENERATE_FLAG/gim.test(originConfigFile)) {
+    const { originAppFile } = Storage.storageData
+    if (!originAppFile || /TPR_GENERATE_FLAG/gim.test(originAppFile)) {
       throw new Error('读取备份配置错误，找不到备份的原始文件且当前为 TPR 生成的配置文件')
     }
-    rawFile = originConfigFile
+    rawFile = originAppFile
   } else {
-    Storage.saveData({ originConfigFile: rawFile })
+    Storage.saveData({ originAppFile: rawFile })
   }
   originAst = parse(rawFile, {
     sourceType: 'module',
@@ -170,7 +170,7 @@ export const updateEntry = (appConfig: any) => {
 }
 
 export const revertConfig = () => {
-  if (!Storage.storageData.originConfigFile) return
+  if (!Storage.storageData.originAppFile) return
 
-  fs.writeFileSync(appEntry, Storage.storageData.originConfigFile)
+  fs.writeFileSync(appEntry, Storage.storageData.originAppFile)
 }
