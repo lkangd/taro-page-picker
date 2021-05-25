@@ -1,3 +1,10 @@
+/*
+ * @Author: Curtis.Liong
+ * @Date: 2021-05-24 17:33:38
+ * @Last Modified by:   Curtis.Liong
+ * @Last Modified time: 2021-05-24 17:33:38
+ */
+export const TPR_STORAGE_NAME = 'taro-pick-runner.json'
 export const TPR_GENERATE_FLAG = 'TPR_GENERATE_FLAG'
 export const TPR_WARNING = `
 /**

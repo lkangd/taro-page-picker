@@ -1,7 +1,14 @@
+/*
+ * @Author: Curtis.Liong
+ * @Date: 2021-05-24 17:33:03
+ * @Last Modified by: Curtis.Liong
+ * @Last Modified time: 2021-05-25 15:27:29
+ */
 import * as vscode from 'vscode'
 
 // utils
-import { getTreeData, updateEntry, revertConfig } from './utils'
+import { getAppConfigProvider, TAppConfigProvider } from './utils/app_config'
+import { getTreeData } from './utils/tree_data'
 import { getIconPath } from './utils/get_icon'
 import { Storage } from './storage'
 
@@ -42,11 +49,12 @@ export class PickViewProvider implements vscode.TreeDataProvider<ViewItem> {
   >()
   readonly onDidChangeTreeData: vscode.Event<ViewItem | undefined> = this._onDidChangeTreeData.event
 
+  private appConfigProvider!: TAppConfigProvider
   private treeData!: TreeItemRoot
-  private appConfig!: AppConfig
   private entry?: TreeItemPage
 
-  constructor() {
+  constructor(private context: vscode.ExtensionContext) {
+    this.appConfigProvider = getAppConfigProvider()
     this.getTreeData()
   }
 
@@ -61,9 +69,10 @@ export class PickViewProvider implements vscode.TreeDataProvider<ViewItem> {
    * @memberof PickViewProvider
    */
   private getTreeData(): void {
-    const [treeData, appConfig] = getTreeData()
-    this.treeData = treeData
-    this.appConfig = appConfig
+    const config: AppConfig | undefined = this.appConfigProvider.findAppConfig()
+    if (!config) return
+
+    this.treeData = getTreeData(config)
     this.entry = undefined
   }
 
@@ -197,17 +206,20 @@ export class PickViewProvider implements vscode.TreeDataProvider<ViewItem> {
     }
 
     const unSortChildren = viewItem.children || []
+    let includeEntryVerdict = false
     viewItem.children = Object.values(
       unSortChildren.reduce(
         (ret, item) => {
           switch (true) {
             case (<TreeItemPage>item).entry:
+              includeEntryVerdict = true
               this.entry = <TreeItemPage>item
               ret.entry.push(item)
               break
             case (<TreeItemPage>item).tabbar:
               // set first picked main package page the entry page
               if (!this.entry && treeItemPageVerdict(item) && !item.parent) {
+                includeEntryVerdict = true
                 this.entry = item
                 item.entry = true
                 ret.entry.push(item)
@@ -218,6 +230,7 @@ export class PickViewProvider implements vscode.TreeDataProvider<ViewItem> {
             case (<TreeItemPage>item).picked:
               // set first picked main package page the entry page
               if (!this.entry && treeItemPageVerdict(item) && !item.parent) {
+                includeEntryVerdict = true
                 this.entry = item
                 item.entry = true
                 ret.entry.push(item)
@@ -235,7 +248,7 @@ export class PickViewProvider implements vscode.TreeDataProvider<ViewItem> {
       )
     ).reduce((ret, sort) => [...ret, ...sort], [])
 
-    if (this.entry && viewItem.children.some(item => treeItemPageVerdict(item))) {
+    if (includeEntryVerdict && this.entry && viewItem.children.some(item => treeItemPageVerdict(item))) {
       this.entry.sibling = <TreeItemPage[]>viewItem.children
     }
 
@@ -331,12 +344,17 @@ export class PickViewProvider implements vscode.TreeDataProvider<ViewItem> {
    * @memberof PickViewProvider
    */
   unPickAll(viewItem: ViewItem) {
+    let includeEntryVerdict = false
     viewItem.children?.forEach(item => {
-      if (!treeItemPageVerdict(item) || item.tabbar) return
-      item.picked = false
+      if (!treeItemPageVerdict(item)) return
+
+      includeEntryVerdict = includeEntryVerdict || item.entry
+      if (item.tabbar) return
+
       item.entry = false
+      item.picked = false
     })
-    this._setFirstPickedEntry()
+    includeEntryVerdict && this._setFirstPickedEntry()
     this.refreshTreeView()
   }
 
@@ -345,7 +363,7 @@ export class PickViewProvider implements vscode.TreeDataProvider<ViewItem> {
    * @memberof PickViewProvider
    */
   revertConfig() {
-    revertConfig()
+    this.appConfigProvider.revertConfig()
     this.refreshTreeView()
   }
 
@@ -383,7 +401,6 @@ export class PickViewProvider implements vscode.TreeDataProvider<ViewItem> {
               break
             default:
               storagePage.picked = false
-              ret.unPicked.push(item.path)
               break
           }
           // only save picked page
@@ -392,7 +409,7 @@ export class PickViewProvider implements vscode.TreeDataProvider<ViewItem> {
           }
           return ret
         },
-        { entry: [], tabbar: [], picked: [], unPicked: [] } as Record<string, string[]>
+        { entry: [], tabbar: [], picked: [] } as Record<string, string[]>
       )
     ).reduce((ret, sort) => [...ret, ...sort], [])
 
@@ -410,11 +427,12 @@ export class PickViewProvider implements vscode.TreeDataProvider<ViewItem> {
       return ret
     }, [] as any)
 
-    const appConfig = { ...this.appConfig }
+    const appConfig = { ...this.appConfigProvider?.appConfig }
     appConfig.pages = pickedPages
     appConfig.subPackages = pickedSubPackages
     delete appConfig.preloadRule // delete preload rule
-    updateEntry(appConfig)
+
+    this.appConfigProvider?.updateAppFile(appConfig as AppConfig)
     Storage.saveData({ pages: storagePages })
   }
 }

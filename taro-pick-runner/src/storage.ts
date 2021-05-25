@@ -1,6 +1,18 @@
+/*
+ * @Author: Curtis.Liong
+ * @Date: 2021-05-24 17:33:11
+ * @Last Modified by: Curtis.Liong
+ * @Last Modified time: 2021-05-25 13:15:16
+ */
 import * as fs from 'fs'
 import * as path from 'path'
 import * as vscode from 'vscode'
+
+// const
+import { TPR_STORAGE_NAME } from './const'
+
+// utils
+import { getAppConfigProvider } from './utils/app_config'
 
 // types
 import { StorageData } from './type'
@@ -8,16 +20,25 @@ import { StorageData } from './type'
 export namespace Storage {
   export let storageData: StorageData = { pages: {}, scenes: {} }
   export let context: vscode.ExtensionContext
+  export let storagePath: string
 
-  export const mountContext = (extensionContext: vscode.ExtensionContext) => (context = extensionContext)
-  export const getStoragePath = () =>
-    path.join(vscode.workspace.workspaceFolders![0].uri.fsPath, '.vscode', 'taro-pick-runner.json')
+  export const init = (extensionContext: vscode.ExtensionContext) => {
+    context = extensionContext
+    loadData()
+  }
+
+  export const getStoragePath = (): string | undefined => {
+    const appEntry = getAppConfigProvider().findAppEntry()
+    if (!appEntry) return
+
+    return path.join(appEntry.replace(/\/src\/app\..*$/, ''), '.vscode', TPR_STORAGE_NAME)
+  }
 
   export const canSaveDataVerdict = () => {
     // TODO make this configurable
     let ret: boolean = true
-    // TODO multiple root support
-    if (!vscode.workspace.workspaceFolders || vscode.workspace.workspaceFolders.length > 1) {
+
+    if (!getStoragePath()) {
       ret = false
     }
 
@@ -49,11 +70,11 @@ export namespace Storage {
 
     const _canSaveDataToProject = canSaveDataVerdict()
     if (_canSaveDataToProject) {
-      const toSavePath: string = getStoragePath()
+      const toSavePath: string = getStoragePath()!
       !fs.existsSync(path.dirname(toSavePath)) && fs.mkdirSync(path.dirname(toSavePath))
       fs.writeFileSync(toSavePath, JSON.stringify(storageData, null, '\t'))
     } else {
-      context.workspaceState.update('taro-pick-runner', JSON.stringify(storageData))
+      context.workspaceState.update('taro-pick-runner', JSON.stringify(storageData, null, '\t'))
     }
   }
 
@@ -66,13 +87,13 @@ export namespace Storage {
     const _canSaveDataToProject = canSaveDataVerdict()
 
     if (_canSaveDataToProject) {
-      const toLoadPath: string = getStoragePath()
+      const toLoadPath: string = getStoragePath()!
       if (!fs.existsSync(toLoadPath)) return storageData
 
       try {
         storageData = JSON.parse(fs.readFileSync(toLoadPath).toString())
       } catch (e) {
-        vscode.window.showErrorMessage(`Taro-Pick-Runner load storage error: ${String(e)}`)
+        vscode.window.showErrorMessage(`Taro-Pick-Runner error: load storage "${String(e)}"`)
       }
     } else {
       storageData = context.workspaceState.get('taro-pick-runner', storageData)

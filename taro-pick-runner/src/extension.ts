@@ -1,3 +1,9 @@
+/*
+ * @Author: Curtis.Liong
+ * @Date: 2021-05-24 17:27:25
+ * @Last Modified by: Curtis.Liong
+ * @Last Modified time: 2021-05-25 13:09:14
+ */
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode'
@@ -6,7 +12,7 @@ import * as vscode from 'vscode'
 import { PickViewProvider } from './pick_view'
 
 // utils
-import { revertConfig } from './utils'
+import { getAppConfigProvider } from './utils/app_config'
 import { Storage } from './storage'
 
 // types
@@ -15,10 +21,9 @@ import { ViewItem } from './type'
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
-  Storage.mountContext(context)
-  Storage.loadData()
+  Storage.init(context)
 
-  const pickViewProvider = new PickViewProvider()
+  const pickViewProvider = new PickViewProvider(context)
   const pickView = vscode.window.createTreeView('pickView', { treeDataProvider: pickViewProvider })
   pickView.onDidChangeSelection(selection => { console.log(selection) })
 
@@ -35,4 +40,4 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 // this method is called when your extension is deactivated
-export function deactivate() { revertConfig() }
+export function deactivate() { getAppConfigProvider().revertConfig() }
