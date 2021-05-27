@@ -1,73 +1,54 @@
-# taro-page-picker README
+# Taro Page Picker README
 
-This is the README for your extension "taro-page-picker". After writing up a brief description, we recommend including the following sections.
+Taro-page-picker（TPP） 是一个基于 vscode 插件系统实现的 taro 配置文件页面挑选插件。
 
+TPP 会根据 Taro 的版本（v1,v2,v3）来动态读取配置文件，并通过 babel 获得 AST。在用户对配置文件作出修改后，点击保存并生成一份新的配置文件，这份配置文件将用于开发时的临时配置文件，除了修改 config 属性外，不修改任何其它已存在的逻辑（注释会删除）。
+
+> ⚠️ 当工作区内存在多个 Taro 项目时，TPP 会优先选择最先找到的、可用的项目作为操作的目标。
+
+> ⚠️ 项目内的临时选择配置项会保存在 .vscode/taro-page-picker.json 下。
 ## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+### 动态拣选需要生成的主包页面配置
 
-For example if there is an image subfolder under your extension project workspace:
+<p align="center">
+  <img src="https://raw.githubusercontent.com/lkangd/taro-page-picker/main/taro-page-picker/resources/docs/main_page.gif" alt="Annotation Hovers" />
+</p>
 
-\!\[feature X\]\(images/feature-x.png\)
+### 动态拣选需要生成的分包页面配置
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+<p align="center">
+  <img src="https://raw.githubusercontent.com/lkangd/taro-page-picker/main/taro-page-picker/resources/docs/sub_packages_page.gif" alt="Annotation Hovers" />
+</p>
 
-## Requirements
+### 批量[选择/取消]主包或分包的页面
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+<p align="center">
+  <img src="https://raw.githubusercontent.com/lkangd/taro-page-picker/main/taro-page-picker/resources/docs/operate_all.gif" alt="Annotation Hovers" />
+</p>
 
-## Extension Settings
+### 一键恢复原始配置文件
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+<p align="center">
+  <img src="https://raw.githubusercontent.com/lkangd/taro-page-picker/main/taro-page-picker/resources/docs/recover_config.gif" alt="Annotation Hovers" />
+</p>
 
-For example:
+### 支持选择指定的页面作为 entry 页
 
-This extension contributes the following settings:
+<p align="center">
+  <img src="https://raw.githubusercontent.com/lkangd/taro-page-picker/main/taro-page-picker/resources/docs/set_entry.gif" alt="Annotation Hovers" />
+</p>
 
-* `myExtension.enable`: enable/disable this extension
-* `myExtension.thing`: set to `blah` to do something
+### 动态增加页面配置后可重新读取
 
-## Known Issues
+<p align="center">
+  <img src="https://raw.githubusercontent.com/lkangd/taro-page-picker/main/taro-page-picker/resources/docs/dynamic_add_config.gif" alt="Annotation Hovers" />
+</p>
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+### TODO
 
-## Release Notes
-
-Users appreciate release notes as you update your extension.
-
-### 1.0.0
-
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
-
------------------------------------------------------------------------------------------------------------
-## Following extension guidelines
-
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
-
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
-
-## Working with Markdown
-
-**Note:** You can author your README using Visual Studio Code.  Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux)
-* Toggle preview (`Shift+CMD+V` on macOS or `Shift+Ctrl+V` on Windows and Linux)
-* Press `Ctrl+Space` (Windows, Linux) or `Cmd+Space` (macOS) to see a list of Markdown snippets
-
-### For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-### Remark
-* [Icon font](https://www.iconfont.cn/collections/detail?spm=a313x.7781069.0.da5a778a4&cid=2692)
+- 增加亮色主题图标支持
+- 增加 git-hooks: pre-commit 以防止误上传配置文件
+- 支持工作区内多项目同时操作配置文件
 
 **Enjoy!**
