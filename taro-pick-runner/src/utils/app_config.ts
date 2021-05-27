@@ -2,7 +2,7 @@
  * @Author: Curtis.Liong
  * @Date: 2021-05-24 17:27:08
  * @Last Modified by: Curtis.Liong
- * @Last Modified time: 2021-05-25 19:22:27
+ * @Last Modified time: 2021-05-27 17:09:01
  */
 import * as fs from 'fs'
 import * as path from 'path'
@@ -14,19 +14,23 @@ import generator from '@babel/generator'
 import { Storage } from '../storage'
 
 // const
-import { TPR_GENERATE_FLAG, TPR_WARNING } from '../const'
+import { TPP_GENERATE_FLAG, TPP_WARNING } from '../const'
+
+// utils
+import { entryToVscodeDir } from '../utils'
 
 // types
 import { AppConfig } from '../type'
 
-const TPR_GENERATE_REGEXP = new RegExp(TPR_GENERATE_FLAG, 'gmi')
+const TPP_GENERATE_REGEXP = new RegExp(TPP_GENERATE_FLAG, 'gmi')
 
 abstract class AppConfigProvider {
+  public appEntry?: string
   public appConfig: AppConfig = { pages: [] }
+  public appFile?: string
   protected appFileName?: string
-  protected appEntry?: string
-  protected appFile?: string
   protected appAst?: any
+  protected workspaceFolder?: vscode.WorkspaceFolder
 
   suffixType = ['tsx', 'ts', 'jsx', 'js']
 
@@ -34,17 +38,20 @@ abstract class AppConfigProvider {
     this.appFileName = appFileName
   }
 
+  public setWorkspaceFolder(workspaceFolder: vscode.WorkspaceFolder): void {
+    this.workspaceFolder = workspaceFolder
+  }
+
   public findAppEntry(): string | undefined {
-    const { workspaceFolders = [] } = vscode.workspace
-    for (const folder of workspaceFolders) {
-      const fsPath = folder.uri.fsPath
-      const entry = this.suffixType
-        .map(ext => `${path.resolve(fsPath, './src')}/${this.appFileName}.${ext}`)
-        .find(ext => fs.existsSync(ext))
-      if (entry) {
-        this.appEntry = entry
-        return entry
-      }
+    const fsPath = this.workspaceFolder?.uri.fsPath
+    if (!fsPath) return
+
+    const entry = this.suffixType
+      .map(ext => `${path.resolve(fsPath, './src')}/${this.appFileName}.${ext}`)
+      .find(ext => fs.existsSync(ext))
+    if (entry) {
+      this.appEntry = entry
+      return entry
     }
   }
 
@@ -52,16 +59,27 @@ abstract class AppConfigProvider {
     if (!this.findAppEntry()) return
 
     const file = fs.readFileSync(this.appEntry!, 'utf-8')
-    if (!TPR_GENERATE_REGEXP.test(file)) {
-      Storage.saveData({ originAppFile: file })
+    const ifExistStoragePath = entryToVscodeDir(this.appEntry!)
+    const ifExistStorageData = Storage.loadData({ path: ifExistStoragePath, update: false })
+    if (!TPP_GENERATE_REGEXP.test(file)) {
       this.appFile = file
       return file
     }
-    const { originAppFile } = Storage.storageData
-    if (originAppFile && !TPR_GENERATE_REGEXP.test(originAppFile)) {
+    const { originAppFile } = ifExistStorageData
+    if (originAppFile && !TPP_GENERATE_REGEXP.test(originAppFile)) {
       this.appFile = originAppFile
       return originAppFile
     }
+  }
+
+  public findAppAst(): string | undefined {
+    if (!this.findAppFile()) return
+
+    this.appAst = parse(this.appFile!, {
+      sourceType: 'module',
+      plugins: ['typescript', 'jsx', 'classProperties']
+    })
+    return this.appAst
   }
 
   public revertConfig() {
@@ -83,17 +101,7 @@ export class AppConfigProviderV1V2 extends AppConfigProvider {
   }
 
   public findAppConfig(): AppConfig | undefined {
-    const appFile = this.findAppFile()
-    if (!appFile) {
-      const e = '读取备份配置错误，找不到备份的原始文件或当前为 TPR 生成的配置文件'
-      vscode.window.showErrorMessage(`Taro-Pick-Runner error: ${String(e)}`)
-      return
-    }
-
-    this.appAst = parse(appFile, {
-      sourceType: 'module',
-      plugins: ['typescript', 'jsx', 'classProperties']
-    })
+    if (!this.findAppAst()) return
 
     let configAst: any
     traverse(this.appAst, {
@@ -105,18 +113,10 @@ export class AppConfigProviderV1V2 extends AppConfigProvider {
     })
 
     const configJSON = generator(configAst).code
-    if (!configJSON) {
-      const e = '解析错误，缺少 config 属性：' + configJSON
-      vscode.window.showErrorMessage(`Taro-Pick-Runner error: ${String(e)}`)
-      return
-    }
+    if (!configJSON) return
 
     const config: AppConfig = new Function(`return ${configJSON}`)()
-    if (Object.prototype.toString.call(config) !== '[object Object]') {
-      const e = '解析错误' + config
-      vscode.window.showErrorMessage(`Taro-Pick-Runner error: ${String(e)}`)
-      return
-    }
+    if (Object.prototype.toString.call(config) !== '[object Object]') return
 
     this.appConfig = config
     return config
@@ -149,12 +149,12 @@ export class AppConfigProviderV1V2 extends AppConfigProvider {
       }
     })
 
-    const appEntryCode = `${TPR_WARNING}${
+    const appEntryCode = `${TPP_WARNING}${
       generator(this.appAst, {
         comments: false,
         jsescOption: { quotes: 'single' }
       }).code
-    }${TPR_WARNING}`
+    }${TPP_WARNING}`
 
     this.appEntry && fs.writeFileSync(this.appEntry, appEntryCode)
   }
@@ -169,17 +169,7 @@ export class AppConfigProviderV3 extends AppConfigProvider {
   }
 
   public findAppConfig(): AppConfig | undefined {
-    const appFile = this.findAppFile()
-    if (!appFile) {
-      const e = '读取备份配置错误，找不到备份的原始文件或当前为 TPR 生成的配置文件'
-      vscode.window.showErrorMessage(`Taro-Pick-Runner error: ${String(e)}`)
-      return
-    }
-
-    this.appAst = parse(appFile, {
-      sourceType: 'module',
-      plugins: ['typescript', 'jsx', 'classProperties']
-    })
+    if (!this.findAppAst()) return
 
     let configAst: any
     traverse(this.appAst, {
@@ -195,18 +185,10 @@ export class AppConfigProviderV3 extends AppConfigProvider {
     })
 
     const configJSON = generator(configAst).code
-    if (!configJSON) {
-      const e = '解析错误，缺少 config 属性：' + configJSON
-      vscode.window.showErrorMessage(`Taro-Pick-Runner error: ${String(e)}`)
-      return
-    }
+    if (!configJSON) return
 
     const config: AppConfig = new Function(`return ${configJSON}`)()
-    if (Object.prototype.toString.call(config) !== '[object Object]') {
-      const e = '解析错误' + config
-      vscode.window.showErrorMessage(`Taro-Pick-Runner error: ${String(e)}`)
-      return
-    }
+    if (Object.prototype.toString.call(config) !== '[object Object]') return
 
     this.appConfig = config
     return config
@@ -246,16 +228,44 @@ export class AppConfigProviderV3 extends AppConfigProvider {
       }
     })
 
-    const appEntryCode = `${TPR_WARNING}${
+    const appEntryCode = `${TPP_WARNING}${
       generator(_appAst, {
         comments: false,
         jsescOption: { quotes: 'single' }
       }).code
-    }${TPR_WARNING}`
+    }${TPP_WARNING}`
 
     this.appEntry && fs.writeFileSync(this.appEntry, appEntryCode)
   }
 }
 
 export type TAppConfigProvider = AppConfigProviderV1V2 | AppConfigProviderV3
-export const getAppConfigProvider = (): TAppConfigProvider => new AppConfigProviderV3()
+
+let instance: TAppConfigProvider | undefined = undefined
+export const getAppConfigProvider = (): TAppConfigProvider | undefined => {
+  if (instance) return instance
+
+  let error: any
+  const { workspaceFolders = [] } = vscode.workspace
+  for (const folder of workspaceFolders) {
+    try {
+      instance = new AppConfigProviderV1V2()
+      instance.setWorkspaceFolder(folder)
+      if (instance.findAppConfig()) return instance
+      throw new Error('读取备份配置错误，找不到配置文件或当前为 TPP 生成的配置文件')
+    } catch (e) {
+      error = e
+    }
+    try {
+      instance = new AppConfigProviderV3()
+      instance.setWorkspaceFolder(folder)
+      if (instance.findAppConfig()) return instance
+      throw new Error('读取备份配置错误，找不到配置文件或当前为 TPP 生成的配置文件')
+    } catch (e) {
+      error = e
+    }
+  }
+
+  error && vscode.window.showErrorMessage(`Taro-Page-Picker error: ${String(error)}`)
+  instance = undefined
+}

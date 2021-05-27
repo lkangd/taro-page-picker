@@ -1,5 +1,5 @@
 {
-  "name": "taro-pick-runner",
+  "name": "taro-page-picker",
   "displayName": "TaroPickRunner",
   "description": "vscode pick runner extension for taro",
   "version": "0.0.1",
@@ -17,17 +17,17 @@
   "contributes": {
     "commands": [
       {
-        "command": "taro-pick-runner.revertConfig",
+        "command": "taro-page-picker.revertConfig",
         "title": "Revert config",
         "icon": "resources/dark/revert.svg"
       },
       {
-        "command": "taro-pick-runner.reloadConfig",
+        "command": "taro-page-picker.reloadConfig",
         "title": "Reload config",
         "icon": "resources/dark/reload.svg"
       },
       {
-        "command": "taro-pick-runner.saveConfig",
+        "command": "taro-page-picker.saveConfig",
         "title": "Save config",
         "icon": "resources/dark/save.svg"
       },
@@ -60,26 +60,26 @@
       "explorer": [
         {
           "id": "pickView",
-          "name": "Taro Pick Runner"
+          "name": "Taro Page Picker"
         }
       ]
     },
     "menus": {
       "view/title": [
         {
-          "command": "taro-pick-runner.revertConfig",
+          "command": "taro-page-picker.revertConfig",
           "title": "还原原始配置",
           "group": "navigation",
           "when": "view == pickView"
         },
         {
-          "command": "taro-pick-runner.reloadConfig",
+          "command": "taro-page-picker.reloadConfig",
           "title": "重新读取配置",
           "group": "navigation",
           "when": "view == pickView"
         },
         {
-          "command": "taro-pick-runner.saveConfig",
+          "command": "taro-page-picker.saveConfig",
           "title": "保存配置",
           "group": "navigation",
           "when": "view == pickView"

@@ -34,10 +34,10 @@ export function activate(context: vscode.ExtensionContext) {
   vscode.commands.registerCommand('pickView.unPickAll', (page: ViewItem) => pickViewProvider.unPickAll(page))
   vscode.commands.registerCommand('pickView.pickAll', (page: ViewItem) => pickViewProvider.pickAll(page))
 
-  vscode.commands.registerCommand('taro-pick-runner.revertConfig', () => pickViewProvider.revertConfig())
-  vscode.commands.registerCommand('taro-pick-runner.reloadConfig', () => pickViewProvider.reloadConfig())
-  vscode.commands.registerCommand('taro-pick-runner.saveConfig', () => pickViewProvider.saveConfig())
+  vscode.commands.registerCommand('taro-page-picker.revertConfig', () => pickViewProvider.revertConfig())
+  vscode.commands.registerCommand('taro-page-picker.reloadConfig', () => pickViewProvider.reloadConfig())
+  vscode.commands.registerCommand('taro-page-picker.saveConfig', () => pickViewProvider.saveConfig())
 }
 
 // this method is called when your extension is deactivated
-export function deactivate() { getAppConfigProvider().revertConfig() }
+export function deactivate() { getAppConfigProvider()?.revertConfig() }

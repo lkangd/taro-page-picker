@@ -2,7 +2,7 @@
  * @Author: Curtis.Liong
  * @Date: 2021-05-24 17:33:03
  * @Last Modified by: Curtis.Liong
- * @Last Modified time: 2021-05-25 15:27:29
+ * @Last Modified time: 2021-05-27 17:07:49
  */
 import * as vscode from 'vscode'
 
@@ -10,6 +10,7 @@ import * as vscode from 'vscode'
 import { getAppConfigProvider, TAppConfigProvider } from './utils/app_config'
 import { getTreeData } from './utils/tree_data'
 import { getIconPath } from './utils/get_icon'
+import { entryToVscodeDir } from './utils'
 import { Storage } from './storage'
 
 // types
@@ -49,12 +50,13 @@ export class PickViewProvider implements vscode.TreeDataProvider<ViewItem> {
   >()
   readonly onDidChangeTreeData: vscode.Event<ViewItem | undefined> = this._onDidChangeTreeData.event
 
-  private appConfigProvider!: TAppConfigProvider
+  private appConfigProvider?: TAppConfigProvider
   private treeData!: TreeItemRoot
   private entry?: TreeItemPage
 
   constructor(private context: vscode.ExtensionContext) {
     this.appConfigProvider = getAppConfigProvider()
+    this.appConfigProvider && Storage.loadData({ path: entryToVscodeDir(this.appConfigProvider.appEntry!) })
     this.getTreeData()
   }
 
@@ -69,11 +71,16 @@ export class PickViewProvider implements vscode.TreeDataProvider<ViewItem> {
    * @memberof PickViewProvider
    */
   private getTreeData(): void {
-    const config: AppConfig | undefined = this.appConfigProvider.findAppConfig()
+    const config: AppConfig | undefined = this.appConfigProvider?.appConfig
     if (!config) return
 
     this.treeData = getTreeData(config)
     this.entry = undefined
+    this.appConfigProvider &&
+      Storage.saveData({
+        data: { originAppFile: this.appConfigProvider.appFile },
+        storagePath: entryToVscodeDir(this.appConfigProvider.appEntry!)
+      })
   }
 
   /**
@@ -201,7 +208,7 @@ export class PickViewProvider implements vscode.TreeDataProvider<ViewItem> {
    */
   getChildren(viewItem?: ViewItem): ViewItem[] {
     if (!viewItem) {
-      console.log('TPR Load Tree Data:>> ', this.treeData)
+      console.log('TPP Load Tree Data:>> ', this.treeData)
       return Object.entries(this.treeData).map(([key, value]) => ({ rawData: value, label: key, children: value }))
     }
 
@@ -363,7 +370,7 @@ export class PickViewProvider implements vscode.TreeDataProvider<ViewItem> {
    * @memberof PickViewProvider
    */
   revertConfig() {
-    this.appConfigProvider.revertConfig()
+    this.appConfigProvider?.revertConfig()
     this.refreshTreeView()
   }
 
@@ -433,6 +440,10 @@ export class PickViewProvider implements vscode.TreeDataProvider<ViewItem> {
     delete appConfig.preloadRule // delete preload rule
 
     this.appConfigProvider?.updateAppFile(appConfig as AppConfig)
-    Storage.saveData({ pages: storagePages })
+    this.appConfigProvider &&
+      Storage.saveData({
+        data: { pages: storagePages },
+        storagePath: entryToVscodeDir(this.appConfigProvider.appEntry!)
+      })
   }
 }

@@ -1,6 +1,6 @@
-# taro-pick-runner README
+# taro-page-picker README
 
-This is the README for your extension "taro-pick-runner". After writing up a brief description, we recommend including the following sections.
+This is the README for your extension "taro-page-picker". After writing up a brief description, we recommend including the following sections.
 
 ## Features
 

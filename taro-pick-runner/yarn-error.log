@@ -28,7 +28,7 @@ Trace:
 
 npm manifest: 
   {
-  	"name": "taro-pick-runner",
+  	"name": "taro-page-picker",
   	"displayName": "TaroPickRunner",
   	"description": "vscode pick runner extension for taro",
   	"version": "0.0.1",
@@ -40,19 +40,19 @@ npm manifest:
   		"Other"
   	],
   	"activationEvents": [
-  		"onCommand:taro-pick-runner.helloWorld",
-  		"onCommand:taro-pick-runner.showTime",
+  		"onCommand:taro-page-picker.helloWorld",
+  		"onCommand:taro-page-picker.showTime",
   		"onView:pickView"
   	],
   	"main": "./dist/extension.js",
   	"contributes": {
   		"commands": [
   			{
-  				"command": "taro-pick-runner.helloWorld",
+  				"command": "taro-page-picker.helloWorld",
   				"title": "Hello World"
   			},
   			{
-  				"command": "taro-pick-runner.showTime",
+  				"command": "taro-page-picker.showTime",
   				"title": "Taro Pick Runner Show Time"
   			}
   		],
