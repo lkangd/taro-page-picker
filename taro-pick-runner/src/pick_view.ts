@@ -2,7 +2,7 @@
  * @Author: Curtis.Liong
  * @Date: 2021-05-24 17:33:03
  * @Last Modified by: Curtis.Liong
- * @Last Modified time: 2021-05-27 17:07:49
+ * @Last Modified time: 2021-05-27 18:35:03
  */
 import * as vscode from 'vscode'
 
@@ -212,38 +212,37 @@ export class PickViewProvider implements vscode.TreeDataProvider<ViewItem> {
       return Object.entries(this.treeData).map(([key, value]) => ({ rawData: value, label: key, children: value }))
     }
 
+    // handle non-page children
+    if (treeItemSubPackageVerdict(viewItem.children?.[0])) {
+      return (
+        viewItem.children?.map((item: TreeItem): ViewItem => {
+          if (treeItemSubPackageVerdict(item)) return { rawData: item, label: item.root, children: item.pages }
+          return { label: '未知', rawData: {} as TreeItem }
+        }) || []
+      )
+    }
+
+    // find entry
     const unSortChildren = viewItem.children || []
-    let includeEntryVerdict = false
+    const existEntryIdx = unSortChildren.findIndex(item => (<TreeItemPage>item).entry)
+    if (existEntryIdx >= 0) {
+      this.entry = unSortChildren[existEntryIdx] as TreeItemPage
+      this.entry.entry = true
+      this.entry.sibling = <TreeItemPage[]>viewItem.children
+    }
+
     viewItem.children = Object.values(
       unSortChildren.reduce(
         (ret, item) => {
           switch (true) {
             case (<TreeItemPage>item).entry:
-              includeEntryVerdict = true
-              this.entry = <TreeItemPage>item
               ret.entry.push(item)
               break
             case (<TreeItemPage>item).tabbar:
-              // set first picked main package page the entry page
-              if (!this.entry && treeItemPageVerdict(item) && !item.parent) {
-                includeEntryVerdict = true
-                this.entry = item
-                item.entry = true
-                ret.entry.push(item)
-              } else {
-                ret.tabbar.push(item)
-              }
+              ret.tabbar.push(item)
               break
             case (<TreeItemPage>item).picked:
-              // set first picked main package page the entry page
-              if (!this.entry && treeItemPageVerdict(item) && !item.parent) {
-                includeEntryVerdict = true
-                this.entry = item
-                item.entry = true
-                ret.entry.push(item)
-              } else {
-                ret.picked.push(item)
-              }
+              ret.picked.push(item)
               break
             default:
               ret.unPicked.push(item)
@@ -255,18 +254,20 @@ export class PickViewProvider implements vscode.TreeDataProvider<ViewItem> {
       )
     ).reduce((ret, sort) => [...ret, ...sort], [])
 
-    if (includeEntryVerdict && this.entry && viewItem.children.some(item => treeItemPageVerdict(item))) {
+    // if haven't a entry, set first picked page to entry
+    if (!this.entry && treeItemPageVerdict(viewItem.children[0]) && viewItem.children[0].picked) {
+      this.entry = viewItem.children[0]
+      this.entry.entry = true
       this.entry.sibling = <TreeItemPage[]>viewItem.children
     }
 
-    const ret =
+    return (
       viewItem.children?.map((item: TreeItem): ViewItem => {
-        if (treeItemSubPackageVerdict(item)) return { rawData: item, label: item.root, children: item.pages }
         if (treeItemPageVerdict(item)) return { rawData: item, label: item.path, parent: item.parent, id: item.id }
+
         return { label: '未知', rawData: {} as TreeItem }
       }) || []
-
-    return ret
+    )
   }
 
   /**

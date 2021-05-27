@@ -2,7 +2,7 @@
  * @Author: Curtis.Liong
  * @Date: 2021-05-24 17:26:51
  * @Last Modified by: Curtis.Liong
- * @Last Modified time: 2021-05-25 21:55:18
+ * @Last Modified time: 2021-05-27 17:27:02
  */
 // utils
 import { Storage } from '../storage'
@@ -21,7 +21,7 @@ const getTreeItemPages = (
   const ret: TreeItemPage[] = pages.map(path => {
     const picked = storagePages?.[`${parent?.root || ''}${path}`]?.picked || tabBarPages?.[path] || false
     const tabbar = tabBarPages?.[path] || false
-    const entry = false
+    const entry = storagePages?.[`${parent?.root || ''}${path}`]?.entry || false
     const ret = {
       path,
       picked,
