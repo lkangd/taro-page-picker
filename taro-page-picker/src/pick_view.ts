@@ -2,7 +2,7 @@
  * @Author: Curtis.Liong
  * @Date: 2021-05-24 17:33:03
  * @Last Modified by: Curtis.Liong
- * @Last Modified time: 2021-05-27 18:35:03
+ * @Last Modified time: 2021-05-27 21:02:51
  */
 import * as vscode from 'vscode'
 
@@ -71,7 +71,7 @@ export class PickViewProvider implements vscode.TreeDataProvider<ViewItem> {
    * @memberof PickViewProvider
    */
   private getTreeData(): void {
-    const config: AppConfig | undefined = this.appConfigProvider?.appConfig
+    const config: AppConfig | undefined = this.appConfigProvider?.findAppConfig()
     if (!config) return
 
     this.treeData = getTreeData(config)
