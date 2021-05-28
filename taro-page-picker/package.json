@@ -1,6 +1,6 @@
 {
   "name": "taro-page-picker",
-  "displayName": "TaroPickRunner",
+  "displayName": "TaroPagePicker",
   "description": "vscode pick runner extension for taro",
   "version": "0.0.1",
   "publisher": "curtis-liong",
@@ -14,6 +14,10 @@
     "onView:pickView"
   ],
   "main": "./dist/extension.js",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/lkangd/taro-page-picker.git"
+	},
   "contributes": {
     "commands": [
       {
