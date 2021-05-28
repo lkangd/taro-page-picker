@@ -12,43 +12,45 @@ TPP 会根据 Taro 的版本（v1,v2,v3）来动态读取配置文件，并通�
 ### 动态拣选需要生成的主包页面配置
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/lkangd/taro-page-picker/main/taro-page-picker/resources/docs/main_page.gif" alt="Annotation Hovers" />
+  <img src="https://raw.githubusercontent.com/lkangd/taro-page-picker/main/resources/docs/main_page.gif" alt="Annotation Hovers" />
 </p>
 
 ### 动态拣选需要生成的分包页面配置
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/lkangd/taro-page-picker/main/taro-page-picker/resources/docs/sub_packages_page.gif" alt="Annotation Hovers" />
+  <img src="https://raw.githubusercontent.com/lkangd/taro-page-picker/main/resources/docs/sub_packages_page.gif" alt="Annotation Hovers" />
 </p>
 
 ### 批量[选择/取消]主包或分包的页面
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/lkangd/taro-page-picker/main/taro-page-picker/resources/docs/operate_all.gif" alt="Annotation Hovers" />
+  <img src="https://raw.githubusercontent.com/lkangd/taro-page-picker/main/resources/docs/operate_all.gif" alt="Annotation Hovers" />
 </p>
 
 ### 一键恢复原始配置文件
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/lkangd/taro-page-picker/main/taro-page-picker/resources/docs/recover_config.gif" alt="Annotation Hovers" />
+  <img src="https://raw.githubusercontent.com/lkangd/taro-page-picker/main/resources/docs/recover_config.gif" alt="Annotation Hovers" />
 </p>
 
 ### 支持选择指定的页面作为 entry 页
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/lkangd/taro-page-picker/main/taro-page-picker/resources/docs/set_entry.gif" alt="Annotation Hovers" />
+  <img src="https://raw.githubusercontent.com/lkangd/taro-page-picker/main/resources/docs/set_entry.gif" alt="Annotation Hovers" />
 </p>
 
 ### 动态增加页面配置后可重新读取
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/lkangd/taro-page-picker/main/taro-page-picker/resources/docs/dynamic_add_config.gif" alt="Annotation Hovers" />
+  <img src="https://raw.githubusercontent.com/lkangd/taro-page-picker/main/resources/docs/dynamic_add_config.gif" alt="Annotation Hovers" />
 </p>
 
 ### TODO
 
+- 生成的临时配置文件支持 prettier
 - 增加亮色主题图标支持
 - 增加 git-hooks: pre-commit 以防止误上传配置文件
 - 支持工作区内多项目同时操作配置文件
+- 支持 ext
 
 **Enjoy!**
