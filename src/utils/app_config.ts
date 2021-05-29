@@ -2,7 +2,7 @@
  * @Author: Curtis.Liong
  * @Date: 2021-05-24 17:27:08
  * @Last Modified by: Curtis.Liong
- * @Last Modified time: 2021-05-29 11:38:24
+ * @Last Modified time: 2021-05-29 17:29:05
  */
 import * as fs from 'fs'
 import * as path from 'path'
@@ -218,22 +218,22 @@ export class AppConfigProviderV3 extends AppConfigProvider {
     })
 
     let replaced = false
-    traverse(this.appAst, {
+    const appAst = { ...this.appAst }
+    traverse(appAst, {
       enter(path) {
         if (
           !replaced &&
           path.node.type === 'ObjectExpression' &&
-          path.node.properties.find(property => (property as { key: { name: string } })?.key?.name === 'pages')
+          (path.node.properties.find(property => (property as { key: { name: string } })?.key?.name === 'pages') ||
+            path.node.properties.find(property => (property as { key: { value: string } })?.key?.value === 'pages'))
         ) {
-          Object.defineProperty(path, 'node', {
-            value: _configAst
-          })
+          path.node.properties = _configAst.properties
           replaced = true
         }
       }
     })
 
-    this.writeConfigFile(this.appAst)
+    this.writeConfigFile(appAst)
   }
 }
 
