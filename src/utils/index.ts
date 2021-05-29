@@ -9,5 +9,12 @@ import * as path from 'path'
 // const
 import { TPP_STORAGE_NAME } from '../const'
 
-export const entryToVscodeDir = (appEntry: string) =>
-  path.join(appEntry.replace(/\/src\/app\..*$/, ''), '.vscode', TPP_STORAGE_NAME)
+export const entryToVscodeDir = (appEntry: string) => {
+  const appEntrySeparate = appEntry.split(path.sep)
+  const retAppEntry = appEntrySeparate
+    .join('/')
+    .replace(/\/src\/app\..*$/, '')
+    .split('/')
+    .join(path.sep)
+  return path.join(retAppEntry, '.vscode', TPP_STORAGE_NAME)
+}
