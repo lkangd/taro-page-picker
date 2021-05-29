@@ -1,8 +1,8 @@
 {
   "name": "taro-page-picker",
   "displayName": "Taro Page Picker",
-  "description": "vscode pick runner extension for taro",
-  "version": "0.0.1",
+  "description": "vscode page picker extension for taro",
+  "version": "0.0.2",
   "publisher": "curtis-liong",
   "engines": {
     "vscode": "^1.54.0"
@@ -10,6 +10,7 @@
   "categories": [
     "Other"
   ],
+  "icon": "resources/tpp_icon.jpg",
   "activationEvents": [
     "onView:pickView"
   ],
