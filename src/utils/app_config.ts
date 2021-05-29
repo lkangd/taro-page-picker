@@ -2,11 +2,12 @@
  * @Author: Curtis.Liong
  * @Date: 2021-05-24 17:27:08
  * @Last Modified by: Curtis.Liong
- * @Last Modified time: 2021-05-27 17:09:01
+ * @Last Modified time: 2021-05-29 11:38:24
  */
 import * as fs from 'fs'
 import * as path from 'path'
 import * as vscode from 'vscode'
+import * as prettier from 'prettier'
 import { parse } from '@babel/parser'
 import traverse from '@babel/traverse'
 import generator from '@babel/generator'
@@ -149,12 +150,12 @@ export class AppConfigProviderV1V2 extends AppConfigProvider {
       }
     })
 
-    const appEntryCode = `${TPP_WARNING}${
-      generator(this.appAst, {
-        comments: false,
-        jsescOption: { quotes: 'single' }
-      }).code
-    }${TPP_WARNING}`
+    let code = generator(this.appAst, { comments: false }).code
+    try {
+      code = prettier.format(code, { parser: 'babel', singleQuote: true })
+    } catch (e) {}
+
+    const appEntryCode = `${TPP_WARNING}${code}${TPP_WARNING}`
 
     this.appEntry && fs.writeFileSync(this.appEntry, appEntryCode)
   }
