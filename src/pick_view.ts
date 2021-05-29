@@ -2,7 +2,7 @@
  * @Author: Curtis.Liong
  * @Date: 2021-05-24 17:33:03
  * @Last Modified by: Curtis.Liong
- * @Last Modified time: 2021-05-27 21:02:51
+ * @Last Modified time: 2021-05-29 18:42:28
  */
 import * as vscode from 'vscode'
 
@@ -50,7 +50,7 @@ export class PickViewProvider implements vscode.TreeDataProvider<ViewItem> {
   >()
   readonly onDidChangeTreeData: vscode.Event<ViewItem | undefined> = this._onDidChangeTreeData.event
 
-  private appConfigProvider?: TAppConfigProvider
+  public appConfigProvider?: TAppConfigProvider
   private treeData!: TreeItemRoot
   private entry?: TreeItemPage
 

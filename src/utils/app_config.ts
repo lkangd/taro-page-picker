@@ -2,7 +2,7 @@
  * @Author: Curtis.Liong
  * @Date: 2021-05-24 17:27:08
  * @Last Modified by: Curtis.Liong
- * @Last Modified time: 2021-05-29 17:29:05
+ * @Last Modified time: 2021-05-29 19:02:25
  */
 import * as fs from 'fs'
 import * as path from 'path'
@@ -60,12 +60,13 @@ abstract class AppConfigProvider {
     if (!this.findAppEntry()) return
 
     const file = fs.readFileSync(this.appEntry!, 'utf-8')
-    const ifExistStoragePath = entryToVscodeDir(this.appEntry!)
-    const ifExistStorageData = Storage.loadData({ path: ifExistStoragePath, update: false })
     if (!TPP_GENERATE_REGEXP.test(file)) {
       this.appFile = file
       return file
     }
+
+    const ifExistStoragePath = entryToVscodeDir(this.appEntry!)
+    const ifExistStorageData = Storage.loadData({ path: ifExistStoragePath, update: false })
     const { originAppFile } = ifExistStorageData
     if (originAppFile && !TPP_GENERATE_REGEXP.test(originAppFile)) {
       this.appFile = originAppFile
@@ -84,7 +85,10 @@ abstract class AppConfigProvider {
   }
 
   public revertConfig() {
-    if (!Storage.storageData.originAppFile || !this.appEntry) return
+    if (!this.appEntry || !Storage.storageData.originAppFile) return
+
+    const file = fs.readFileSync(this.appEntry, 'utf-8')
+    if (!TPP_GENERATE_REGEXP.test(file) || TPP_GENERATE_REGEXP.test(Storage.storageData.originAppFile)) return
 
     fs.writeFileSync(this.appEntry, Storage.storageData.originAppFile)
   }
