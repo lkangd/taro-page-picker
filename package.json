@@ -2,7 +2,7 @@
   "name": "taro-page-picker",
   "displayName": "Taro Page Picker",
   "description": "vscode page picker extension for taro",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "publisher": "curtis-liong",
   "engines": {
     "vscode": "^1.54.0"
