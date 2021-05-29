@@ -2,7 +2,7 @@
  * @Author: Curtis.Liong
  * @Date: 2021-05-24 17:26:51
  * @Last Modified by: Curtis.Liong
- * @Last Modified time: 2021-05-27 17:27:02
+ * @Last Modified time: 2021-05-29 17:35:23
  */
 // utils
 import { Storage } from '../storage'
@@ -65,6 +65,7 @@ export const getTreeData = (appConfig: AppConfig): TreeItemRoot => {
     })
   })()
 
-  const treeData = { pages, subPackages }
+  const treeData: TreeItemRoot = { pages }
+  subPackages.length && Object.assign(treeData, { subPackages })
   return treeData
 }
