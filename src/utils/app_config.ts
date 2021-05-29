@@ -89,6 +89,17 @@ abstract class AppConfigProvider {
     fs.writeFileSync(this.appEntry, Storage.storageData.originAppFile)
   }
 
+  protected writeConfigFile(appAst = this.appAst) {
+    let code = generator(appAst, { comments: false }).code
+    try {
+      code = prettier.format(code, { parser: 'babel', singleQuote: true, semi: false })
+    } catch (e) {}
+
+    const appEntryCode = `// @ts-nocheck\n/* eslint-disable */${TPP_WARNING}${code}${TPP_WARNING}`
+
+    this.appEntry && fs.writeFileSync(this.appEntry, appEntryCode)
+  }
+
   abstract findAppConfig(): AppConfig | undefined
   abstract updateAppFile(config: AppConfig): void
 }
@@ -150,14 +161,7 @@ export class AppConfigProviderV1V2 extends AppConfigProvider {
       }
     })
 
-    let code = generator(this.appAst, { comments: false }).code
-    try {
-      code = prettier.format(code, { parser: 'babel', singleQuote: true })
-    } catch (e) {}
-
-    const appEntryCode = `${TPP_WARNING}${code}${TPP_WARNING}`
-
-    this.appEntry && fs.writeFileSync(this.appEntry, appEntryCode)
+    this.writeConfigFile(this.appAst)
   }
 }
 
@@ -229,14 +233,7 @@ export class AppConfigProviderV3 extends AppConfigProvider {
       }
     })
 
-    const appEntryCode = `${TPP_WARNING}${
-      generator(_appAst, {
-        comments: false,
-        jsescOption: { quotes: 'single' }
-      }).code
-    }${TPP_WARNING}`
-
-    this.appEntry && fs.writeFileSync(this.appEntry, appEntryCode)
+    this.writeConfigFile(this.appAst)
   }
 }
 
