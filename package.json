@@ -24,17 +24,27 @@
       {
         "command": "taro-page-picker.revertConfig",
         "title": "Revert config",
-        "icon": "resources/dark/revert.svg"
+        "icon": "$(notebook-revert)"
       },
       {
         "command": "taro-page-picker.reloadConfig",
         "title": "Reload config",
-        "icon": "resources/dark/reload.svg"
+        "icon": "$(extensions-refresh)"
       },
       {
         "command": "taro-page-picker.saveConfig",
         "title": "Save config",
-        "icon": "resources/dark/save.svg"
+        "icon": "$(save)"
+      },
+      {
+        "command": "taro-page-picker.showAllPages",
+        "title": "Show all pages",
+        "icon": "$(eye)"
+      },
+      {
+        "command": "taro-page-picker.showPickedPages",
+        "title": "Show picked pages",
+        "icon": "$(eye-closed)"
       },
       {
         "command": "pickView.setEntry",
@@ -88,6 +98,18 @@
           "title": "保存配置",
           "group": "navigation",
           "when": "view == pickView"
+        },
+        {
+          "command": "taro-page-picker.showAllPages",
+          "title": "显示所有页面",
+          "group": "navigation",
+          "when": "view == pickView && TPP.showPickedOnly"
+        },
+        {
+          "command": "taro-page-picker.showPickedPages",
+          "title": "显示已选页面",
+          "group": "navigation",
+          "when": "view == pickView && !TPP.showPickedOnly"
         }
       ],
       "view/item/context": [
