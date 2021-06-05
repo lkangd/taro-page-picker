@@ -30,7 +30,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   const pickViewProvider = new PickViewProvider(context)
   const pickView = vscode.window.createTreeView('pickView', { treeDataProvider: pickViewProvider })
-  pickView.onDidChangeSelection(pickViewProvider.showPageTextDocument.bind(pickViewProvider))
+  pickViewProvider.loadTreeView(pickView)
 
   vscode.commands.registerCommand('pickView.setEntry', (page: ViewItem) => pickViewProvider.setEntry(page))
   vscode.commands.registerCommand('pickView.unPick', (page: ViewItem) => pickViewProvider.unPick(page))
@@ -42,7 +42,10 @@ export function activate(context: vscode.ExtensionContext) {
   vscode.commands.registerCommand('taro-page-picker.revertConfig', () => pickViewProvider.revertConfig())
   vscode.commands.registerCommand('taro-page-picker.reloadConfig', () => pickViewProvider.reloadConfig())
   vscode.commands.registerCommand('taro-page-picker.saveConfig', () => pickViewProvider.saveConfig())
+  vscode.commands.registerCommand('taro-page-picker.showAllPages', () => pickViewProvider.showAllPages())
+  vscode.commands.registerCommand('taro-page-picker.showPickedPages', () => pickViewProvider.showPickedPages())
 
+  pickView.onDidChangeSelection(pickViewProvider.showPageTextDocument.bind(pickViewProvider))
   vscode.workspace.onDidChangeTextDocument(evt => {
     if (evt.document.fileName !== pickViewProvider.appConfigProvider?.appEntry) return
 

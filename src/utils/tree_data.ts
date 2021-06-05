@@ -18,7 +18,7 @@ const getTreeItemPages = (
   const {
     storageData: { pages: storagePages }
   } = Storage
-  const ret: TreeItemPage[] = pages.map(path => {
+  const ret: TreeItemPage[] = [...new Set(pages)].map(path => {
     const picked = storagePages?.[`${parent?.root || ''}${path}`]?.picked || tabBarPages?.[path] || false
     const tabbar = tabBarPages?.[path] || false
     const entry = storagePages?.[`${parent?.root || ''}${path}`]?.entry || false
@@ -56,7 +56,7 @@ export const getTreeData = (appConfig: AppConfig): TreeItemRoot => {
 
   // 分包数据
   const subPackages: TreeItemSubPackage[] = (() => {
-    const tempRet = appConfig.subPackages || []
+    const tempRet = [...new Set(appConfig.subPackages || [])]
     return tempRet.map((item: { root: string; pages: string[] }) => {
       const ret: TreeItemSubPackage = { root: item.root, pages: [] }
       ret.pages = getTreeItemPages(item.pages, tabBarPageMap, ret)
