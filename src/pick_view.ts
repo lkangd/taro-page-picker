@@ -4,13 +4,14 @@
  * @Last Modified by: Curtis.Liong
  * @Last Modified time: 2021-05-29 18:42:28
  */
+import * as path from 'path'
 import * as vscode from 'vscode'
 
 // utils
 import { getAppConfigProvider, TAppConfigProvider } from './utils/app_config'
+import { entryToVscodeDir, findPagePath } from './utils'
 import { getTreeData } from './utils/tree_data'
 import { getIconPath } from './utils/get_icon'
-import { entryToVscodeDir } from './utils'
 import { Storage } from './storage'
 
 // types
@@ -446,5 +447,34 @@ export class PickViewProvider implements vscode.TreeDataProvider<ViewItem> {
         data: { pages: storagePages },
         storagePath: entryToVscodeDir(this.appConfigProvider.appEntry!)
       })
+  }
+
+  /**
+   * 选中类型为 page 的 viewItem 时
+   * 自动打开对应的文件在视窗内
+   * 否则，打开配置文件
+   * @param {vscode.TreeViewSelectionChangeEvent<ViewItem>} selection
+   * @memberof PickViewProvider
+   */
+  showPageTextDocument(selection: vscode.TreeViewSelectionChangeEvent<ViewItem>) {
+    if (!treeItemPageVerdict(selection.selection?.[0].rawData)) {
+      this.appConfigProvider?.appEntry &&
+        vscode.window.showTextDocument(vscode.Uri.file(this.appConfigProvider.appEntry), { preview: false })
+      return
+    }
+
+    const pageRawData = selection.selection?.[0].rawData
+    const pagePathName = path.join(
+      this.appConfigProvider?.workspaceFolder?.uri.fsPath || '',
+      'src',
+      pageRawData.parent?.root || '',
+      pageRawData.path
+    )
+    const pagePath = findPagePath(pagePathName)
+    if (pagePath) {
+      vscode.window.showTextDocument(vscode.Uri.file(pagePath))
+    } else {
+      vscode.window.showWarningMessage(`Taro-Page-Picker warning: 路径对应的页面文件（${pagePathName}）不存在`)
+    }
   }
 }

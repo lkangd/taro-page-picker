@@ -4,6 +4,7 @@
  * @Last Modified by:   Curtis.Liong
  * @Last Modified time: 2021-05-24 17:33:38
  */
+export const TPP_SUFFIX_TYPE = ['tsx', 'ts', 'jsx', 'js']
 export const TPP_STORAGE_NAME = 'taro-page-picker.json'
 export const TPP_GENERATE_FLAG = 'TPP_GENERATE_FLAG'
 export const TPP_WARNING = `
