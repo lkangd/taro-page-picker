@@ -15,7 +15,7 @@ import generator from '@babel/generator'
 import { Storage } from '../storage'
 
 // const
-import { TPP_GENERATE_FLAG, TPP_WARNING } from '../const'
+import { TPP_GENERATE_FLAG, TPP_WARNING, TPP_SUFFIX_TYPE } from '../const'
 
 // utils
 import { entryToVscodeDir } from '../utils'
@@ -29,11 +29,11 @@ abstract class AppConfigProvider {
   public appEntry?: string
   public appConfig: AppConfig = { pages: [] }
   public appFile?: string
+  public workspaceFolder?: vscode.WorkspaceFolder
   protected appFileName?: string
   protected appAst?: any
-  protected workspaceFolder?: vscode.WorkspaceFolder
 
-  suffixType = ['tsx', 'ts', 'jsx', 'js']
+  suffixType = TPP_SUFFIX_TYPE
 
   constructor(appFileName: string) {
     this.appFileName = appFileName

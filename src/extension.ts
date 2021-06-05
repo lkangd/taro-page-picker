@@ -30,7 +30,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   const pickViewProvider = new PickViewProvider(context)
   const pickView = vscode.window.createTreeView('pickView', { treeDataProvider: pickViewProvider })
-  pickView.onDidChangeSelection(selection => { console.log(selection) })
+  pickView.onDidChangeSelection(pickViewProvider.showPageTextDocument.bind(pickViewProvider))
 
   vscode.commands.registerCommand('pickView.setEntry', (page: ViewItem) => pickViewProvider.setEntry(page))
   vscode.commands.registerCommand('pickView.unPick', (page: ViewItem) => pickViewProvider.unPick(page))
@@ -61,4 +61,6 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 // this method is called when your extension is deactivated
-export function deactivate() { getAppConfigProvider()?.revertConfig() }
+export function deactivate() {
+  getAppConfigProvider()?.revertConfig()
+}
