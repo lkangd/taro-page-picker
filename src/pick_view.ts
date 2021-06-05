@@ -9,7 +9,7 @@ import * as vscode from 'vscode'
 
 // utils
 import { getAppConfigProvider, TAppConfigProvider } from './utils/app_config'
-import { entryToVscodeDir, findPagePath } from './utils'
+import { entryToVscodeDir, findPagePath, calAPCount } from './utils'
 import { getTreeData } from './utils/tree_data'
 import { getIconPath } from './utils/get_icon'
 import { Storage } from './storage'
@@ -52,13 +52,43 @@ export class PickViewProvider implements vscode.TreeDataProvider<ViewItem> {
   readonly onDidChangeTreeData: vscode.Event<ViewItem | undefined> = this._onDidChangeTreeData.event
 
   public appConfigProvider?: TAppConfigProvider
+  private showPickedOnly: boolean = false
+  private treeView?: vscode.TreeView<ViewItem>
   private treeData!: TreeItemRoot
   private entry?: TreeItemPage
+  private rootChildren?: ViewItem[]
 
   constructor(private context: vscode.ExtensionContext) {
     this.appConfigProvider = getAppConfigProvider()
     this.appConfigProvider && Storage.loadData({ path: entryToVscodeDir(this.appConfigProvider.appEntry!) })
     this.getTreeData()
+    vscode.commands.executeCommand('setContext', 'TPP.showPickedOnly', false)
+  }
+
+  private _updateTreeViewDisplay() {
+    if (!this.treeView) return
+
+    if (this.appConfigProvider?.appConfig.pages.length) {
+      this.treeView.message = undefined
+    } else {
+      this.treeView.message = '没有找到有效的 Taro 配置文件'
+    }
+
+    if (!this.treeData) {
+      this.treeView.description = undefined
+      return
+    }
+    // 已选页面/总页面
+    const { all, picked } = calAPCount(this.treeData)
+    if (all) {
+      this.treeView.description = `(${picked}/${all})`
+    } else {
+      this.treeView.description = undefined
+    }
+  }
+  loadTreeView(treeView: vscode.TreeView<ViewItem>) {
+    treeView.message = '配置加载中...'
+    this.treeView = treeView
   }
 
   refreshTreeView(viewItem?: ViewItem) {
@@ -210,17 +240,24 @@ export class PickViewProvider implements vscode.TreeDataProvider<ViewItem> {
   getChildren(viewItem?: ViewItem): ViewItem[] {
     if (!viewItem) {
       console.log('TPP Load Tree Data:>> ', this.treeData)
-      return Object.entries(this.treeData).map(([key, value]) => ({ rawData: value, label: key, children: value }))
+      this._updateTreeViewDisplay()
+      this.rootChildren = Object.entries(this.treeData).map(([key, value]) => ({ rawData: value, label: key, children: value }))
+      return this.rootChildren
     }
 
     // handle non-page children
     if (treeItemSubPackageVerdict(viewItem.children?.[0])) {
-      return (
+      const ret = (
         viewItem.children?.map((item: TreeItem): ViewItem => {
           if (treeItemSubPackageVerdict(item)) return { rawData: item, label: item.root, children: item.pages }
           return { label: '未知', rawData: {} as TreeItem }
         }) || []
       )
+      if (this.showPickedOnly) {
+        return ret.filter(subPackage => subPackage.children?.some((item) => (item as TreeItemPage).picked))
+      } else {
+        return ret
+      }
     }
 
     // find entry
@@ -244,6 +281,8 @@ export class PickViewProvider implements vscode.TreeDataProvider<ViewItem> {
               break
             case (<TreeItemPage>item).picked:
               ret.picked.push(item)
+              break
+            case this.showPickedOnly:
               break
             default:
               ret.unPicked.push(item)
@@ -458,8 +497,10 @@ export class PickViewProvider implements vscode.TreeDataProvider<ViewItem> {
    */
   showPageTextDocument(selection: vscode.TreeViewSelectionChangeEvent<ViewItem>) {
     if (!treeItemPageVerdict(selection.selection?.[0].rawData)) {
-      this.appConfigProvider?.appEntry &&
-        vscode.window.showTextDocument(vscode.Uri.file(this.appConfigProvider.appEntry), { preview: false })
+      const appEntry = this.appConfigProvider?.appEntry
+      if (appEntry && appEntry !== vscode.window.activeTextEditor?.document.uri.fsPath) {
+        vscode.window.showTextDocument(vscode.Uri.file(appEntry), { preview: false })
+      }
       return
     }
 
@@ -476,5 +517,17 @@ export class PickViewProvider implements vscode.TreeDataProvider<ViewItem> {
     } else {
       vscode.window.showWarningMessage(`Taro-Page-Picker warning: 路径对应的页面文件（${pagePathName}）不存在`)
     }
+  }
+
+  showAllPages() {
+    this.showPickedOnly = false
+    vscode.commands.executeCommand('setContext', 'TPP.showPickedOnly', false)
+    this.refreshTreeView()
+  }
+
+  showPickedPages() {
+    this.showPickedOnly = true
+    vscode.commands.executeCommand('setContext', 'TPP.showPickedOnly', true)
+    this.refreshTreeView()
   }
 }
